@@ -11,3 +11,6 @@ data/embeddings/
 models/
 *.log
 .DS_Store
+logs/
+*.log
+*.json.log
