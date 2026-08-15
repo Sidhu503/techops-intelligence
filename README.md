@@ -222,7 +222,7 @@ techops-intelligence/
 
 ## Author
 
-**Sidhu**
+**Sudharshan**
 
 Built this to demonstrate production-grade AI engineering skills —
 not tutorials, not demos, actual systems with evaluation and monitoring.
