@@ -1,0 +1,1402 @@
+[
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-primary] Connection pool exhausted: max_connections=100 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:20 WARN [kubelet] Failed to start pod 'my-app-76543' with error: Failed to pull image: rpc error: code = Unknown desc = rpc error: code = Unknown desc =",
+    "severity": "WARN",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:23 ERROR [nginx-ingress] Timeout waiting for backend pod 'my-app' to start serving",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:42:25 FATAL [redis-cache] Redis server 192.168.1.100:6379 failed to start: dial tcp 192.168.1.100:6379: connect: connection refused",
+    "severity": "FATAL",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:42:27 WARN [kubelet] Container 'my-app' in pod 'my-app-76543' is restarting",
+    "severity": "WARN",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:30 ERROR [postgres-secondary] Failed to establish a connection to master: connection timed out",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:33 WARN [redis-cache] Redis cache is over capacity: total requests=1000, max requests=950",
+    "severity": "WARN",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:42:36 ERROR [nginx-ingress] Unable to allocate backend pool for incoming request",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:42:39 ERROR [etcd] Failed to acquire lease on '/path/to/lease': lease already exists",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:42 ERROR [postgres-primary] Failed to prepare statement: error code: 42P01",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [kube-apiserver] Failed to serve request: HTTP error 500: Internal Server Error",
+    "severity": "ERROR",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 04:05:23 WARN [nginx-ingress] Received 502 Bad Gateway from backend: http://backend-service:8080",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 04:12:30 ERROR [postgres-primary] Unable to connect to database: timeout: dial tcp 192.168.1.10:5432: connect: connection refused",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 04:20:45 WARN [redis-cache] Redis connection pool exhausted: max active clients=100, current active clients=101",
+    "severity": "WARN",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 04:25:08 ERROR [etcd] Watcher for /dir/123 stopped: watch key /dir/123 not found",
+    "severity": "ERROR",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 04:30:12 ERROR [redis-cache] Redis connection reset: connection closed by peer",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 04:36:25 WARN [kubelet] Failed to sync node: no response from apiserver: context deadline exceeded",
+    "severity": "WARN",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 04:42:30 ERROR [etcd] Lease update failed: lease key not found: lease key not found",
+    "severity": "ERROR",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 04:48:45 ERROR [nginx-ingress] Failed to proxy request: http://backend-service:8080: dial tcp 192.168.1.20:8080: connect: connection refused",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 04:54:00 ERROR [postgres-replica] Connection pool exhausted: max_connections=100 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-primary] Connection pool exhausted: max_connections=100 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:20 FATAL [kube-apiserver] Internal error occurred: failed to create request to scheduler: Request to scheduler failed with error: \"Node \"node1\" not found\"",
+    "severity": "FATAL",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:25 WARN [nginx-ingress] Failed to parse request: invalid URI scheme: http://example.com",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:42:30 ERROR [redis-cache] Redis is running out of memory. Current memory usage is 80% of the total memory allocated.",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:37 ERROR [etcd] Connection to peer failed: rpc error: code = Unavailable desc = grpc: the server is too busy to handle the request",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:42 ERROR [postgres-replica] Unable to allocate new memory: out of memory",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:49 WARN [nginx-ingress] Slow request detected: 30 seconds since request start",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:42:56 ERROR [redis-cache] Failed to create new slot: slot already in use",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:43:02 ERROR [postgres-primary] Database backup failed: file system is full",
+    "severity": "ERROR",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:43:08 WARN [nginx-ingress] SSL handshake failed: certificate chain validation failed",
+    "severity": "WARN",
+    "category": "security"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [redis-cache] Redis connection pool exhausted, max active connections reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:20 FATAL [kube-apiserver] Failed to serve request: http2 stream error, stream error code 101",
+    "severity": "FATAL",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:25 WARN [nginx-ingress] HTTP request timeout, request took more than 10 seconds to complete",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:42:30 WARN [postgres-replica] Replication lag exceeds 30 seconds, node is lagged by 50 messages",
+    "severity": "WARN",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:35 ERROR [etcd] Internal etcd error: key 'system/leader' not found",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:40 WARN [redis-cache] Redis database 127.0.0.1:6379: memory usage exceeds 80% of allocated limit",
+    "severity": "WARN",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:45 ERROR [postgres-primary] Could not connect to backend database, connection refused",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:50 WARN [nginx-ingress] HTTP request latency: 123ms, exceeds the threshold of 100ms",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:42:55 ERROR [etcd] Internal etcd error: key 'system/leader' not found",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:43:00 FATAL [redis-cache] Redis database 127.0.0.1:6379: memory usage exceeds 90% of allocated limit, restart is required",
+    "severity": "FATAL",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-primary] Connection pool exhausted: max_connections=100 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 WARN [kubernetes] Job 'myjob' is stuck, last error: 'Resource not found'",
+    "severity": "WARN",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [redis-cache] Client error: 'Could not connect to Redis at 127.0.0.1:6379'",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 FATAL [nginx-ingress] Failed to listen on port 8080: Address already in use",
+    "severity": "FATAL",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [etcd] Node 'node1' is not healthy: 'etcdserver: permission denied'",
+    "severity": "ERROR",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-replica] Failed to sync data: 'postgres-server not responding'",
+    "severity": "ERROR",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 WARN [kube-apiserver] Request timeout on 'request-id': 500 ms",
+    "severity": "WARN",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [nginx-ingress] Internal server error: 'Error in worker process'",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 FATAL [redis-cache] Redis server shutdown: 'server error'",
+    "severity": "FATAL",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-primary] Transaction timeout, transaction ID: '1234567890'",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-primary] Connection pool exhausted: max_connections=100 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:43:22 WARN [nginx-ingress] Backend service unavailable: service=api, error=503",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:44:05 FATAL [kube-apiserver] Request timeout: context deadline exceeded",
+    "severity": "FATAL",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:44:45 ERROR [redis-cache] Failed to connect to redis: dial tcp 192.168.1.2:6379: connect: connection refused",
+    "severity": "ERROR",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:45:11 WARN [etcd] Internal error: unable to sync leases: replication error: cannot find previous leader's lease in lease history: unable to read leader lease: failed to find previous leader's lease: leader lease not found",
+    "severity": "WARN",
+    "category": "security"
+  },
+  {
+    "log_line": "2024-01-15 03:45:56 ERROR [postgres-replica] Failed to allocate memory: address=0x12345678 size=1024",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:46:32 ERROR [nginx-ingress] SSL handshake failed: certificate verification failed for server 192.168.1.2:443",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:47:09 FATAL [kubelet] Failed to sync node status: node is in a bad state, cannot proceed",
+    "severity": "FATAL",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:47:46 ERROR [redis-cache] Failed to write to redis: dial tcp 192.168.1.2:6379: connect: connection refused",
+    "severity": "ERROR",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:48:22 WARN [kubernetes-controller-manager] Failed to reconcile resource: resource not found: pod/redis-master",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-primary] Connection pool exhausted: max_connections=100 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:20 WARN [nginx-ingress] Connection to upstream server timed out: 5000 ms",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:42:25 ERROR [kubelet] Failed to create pod sandbox: rpc error: code = Unknown desc = failed to set up sandbox network for container: NetworkPlugin.cni.cni.nfssdk.io: Network plugin failed to setup pod network: unable to allocate network: resource exhausted",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:30 WARN [redis-cache] Redis server shutdown detected: server shutting down",
+    "severity": "WARN",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:42:35 ERROR [postgres-primary] Failed to allocate memory: memory address 0x12345678 used",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:40 WARN [nginx-ingress] Slow request detected: latency: 100 ms",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:42:45 ERROR [etcd] Unable to write to etcd: etcd cluster is unavailable",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:50 ERROR [postgres-replica] Failed to execute query: query execution failed: database is down",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:55 ERROR [kubernetes-controller-manager] Failed to reconcile service: service not found",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:43:00 ERROR [redis-cache] Unable to connect to redis: connection refused",
+    "severity": "ERROR",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [nginx-ingress] Failed to allocate memory for worker process: address 0x12345678 already in use",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 04:05:20 WARN [redis-cache] Redis client 0x7f7e12345678 reached max connections: attempting to close others",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 04:20:12 ERROR [kubernetes-api] Timeout occurred while attempting to contact API server at http://192.168.99.1:8443",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 04:30:08 FATAL [postgres-primary] Database shutdown initiated: critical data corruption detected",
+    "severity": "FATAL",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 04:45:17 WARN [kubelet] Detected container memory growth exceeding 50% in 3 pods",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 04:50:23 ERROR [redis-cache] Redis client 0x7f7e12345678 reported a connection reset due to inactivity",
+    "severity": "ERROR",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 05:00:12 ERROR [nginx-ingress] SSL handshake failed for connection from 192.168.100.1:45898",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 05:10:20 FATAL [etcd] etcd member 0x7f7e12345678 encountered fatal error: network connection to peer 192.168.101.100:23800 failed",
+    "severity": "FATAL",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 05:20:17 ERROR [postgres-replica] Replication lag exceeds threshold: 1000 seconds",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 05:30:23 WARN [kube-controller-manager] Controller Manager received unexpected message from API server: message body is invalid",
+    "severity": "WARN",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [nginx-ingress] Failed to serve request due to network failure: Connection timed out",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:45:23 FATAL [etcd] etcd process crashed: unexpected EOF received from peeroter",
+    "severity": "FATAL",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:47:09 WARN [redis-cache] Memory usage exceeded 80%, 500MB allocated, 400MB used",
+    "severity": "WARN",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:50:12 ERROR [postgres-primary] Connection pool exhausted: max_connections=100 reached, 75 connections in use",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:51:35 WARN [nginx-ingress] High CPU usage detected, average CPU load is 80%",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:53:21 ERROR [redis-cache] Redis cache instance 0x432142345 crashed, retrying in 10s",
+    "severity": "ERROR",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:56:07 FATAL [kube-apiserver] Failed to serve request: service unavailable, retrying in 5s",
+    "severity": "FATAL",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:58:43 ERROR [nginx-ingress] Timeout while connecting to upstream server",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 04:00:19 WARN [redis-cache] Memory usage is 95%, 100MB allocated, 90MB used, consider scaling down",
+    "severity": "WARN",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 04:02:27 ERROR [postgres-replica] Failed to replicate data: write failure on socket: Connection reset by peer",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-primary] Connection pool exhausted: max_connections=100 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:43:30 WARN [nginx-ingress] HTTP request timeout on port 80",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:44:25 ERROR [redis-cache] Redis server stopped due to memory pressure",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:45:01 ERROR [kube-apiserver] Failed to start HTTP server on port 6443",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:45:32 ERROR [postgres-secondary] PostgreSQL server stopped due to memory leak",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:46:18 WARN [redis-cache] Redis cache size exceeded, consider eviction policy",
+    "severity": "WARN",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:47:09 ERROR [etcd] etcd member 3 failed to sync with peers, consider rejoin",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:47:45 ERROR [nginx-ingress] Unable to bind to port 8080, port already in use",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:48:23 ERROR [postgres-primary] Failed to connect to PostgreSQL database at 127.0.0.1:5432",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:49:10 WARN [kube-apiserver] Timeout waiting for Kubernetes API server health check",
+    "severity": "WARN",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [nginx-ingress] Failed to allocate buffer: 0x400000000000, request size: 1024",
+    "severity": "ERROR",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:42:20 FATAL [etcd] Connection to peer 10.0.0.2:2379 failed: dial tcp 10.0.0.2:2379: connect: connection refused",
+    "severity": "FATAL",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:23 WARN [redis-cache] Redis cache server shutdown: shutting down due to low memory usage",
+    "severity": "WARN",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:26 ERROR [postgres-primary] Unable to allocate connection: max_connections reached, max_connections=50",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:29 FATAL [kube-apiserver] Failed to parse request body: invalid format for field 'token': not a valid UUID",
+    "severity": "FATAL",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:42:32 WARN [nginx-ingress] High CPU usage detected on worker 0: 80%",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:42:35 ERROR [redis-cache] Redis server shutdown: memory usage limit reached",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:38 ERROR [postgres-replica] Failed to establish database connection: connection timed out after 10s",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:41 WARN [nginx-ingress] HTTP request timeout: request for 'https://example.com/api' exceeded 30s deadline",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:42:44 ERROR [kube-controller-manager] Unable to reconcile resource 'deployment': resource is missing",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-primary] Connection pool exhausted: max_connections=100 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:43:22 WARN [redis-cache] Redis server port 6379 is not responding, connection lost after 5s",
+    "severity": "WARN",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:44:56 ERROR [kube-apiserver] Failed to authenticate request from 192.168.1.100: Authorization failure",
+    "severity": "ERROR",
+    "category": "authentication"
+  },
+  {
+    "log_line": "2024-01-15 03:45:30 ERROR [nginx-ingress] Internal server error: HTTP request timeout",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:46:02 WARN [kubernetes-dashboard] Dashboard pod is using too much CPU: 70%",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:47:25 ERROR [etcd] etcd member 1234567890123456789 failed to sync with leader: network partition detected",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:48:49 ERROR [postgres-replica] Failed to establish connection to master: timeout after 5s",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:49:05 WARN [nginx-ingress] Ingress controller is over 90% CPU utilization, consider scaling",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:50:10 ERROR [redis-cache] Redis server port 6380 is not responding, connection lost after 10s",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:51:34 ERROR [etcd] etcd member 9876543210987654321 is missing from the cluster",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-primary] Connection pool exhausted: max_connections=100 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 WARN [nginx-ingress] High CPU usage detected: 75%",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [kubelet] Node synchronization error: node.id=12345, error_message='Failed to sync with master'",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 FATAL [redis-cache] Redis connection error: connection refused on port 6379",
+    "severity": "FATAL",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [etcd] etcd server error: ETCD_ERROR: unable to serve client request, error='timeout'",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-replica] Replication lag: current lag=5s, max lag=20s",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 WARN [nginx-ingress] SSL handshake timeout detected",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [redis-cache] Memory limit exceeded: total memory used=80%, max memory=90%",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [kube-apiserver] Authentication failure: invalid credentials provided",
+    "severity": "ERROR",
+    "category": "security"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 WARN [postgres-primary] Disk I/O wait time: average=20ms, max=50ms",
+    "severity": "WARN",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-primary] Connection pool exhausted: max_connections=100 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:43:20 FATAL [nginx-ingress] Internal server error occurred: 500",
+    "severity": "FATAL",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:44:25 WARN [redis-cache] Cache eviction triggered: 100 keys expired in the last minute",
+    "severity": "WARN",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:45:31 ERROR [kube-apiserver] Failed to authenticate request: invalid credentials",
+    "severity": "ERROR",
+    "category": "security"
+  },
+  {
+    "log_line": "2024-01-15 03:46:40 ERROR [etcd] Node unreachable: node1.example.com:4001",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:47:45 WARN [postgres-replica] Database write latency: 100ms",
+    "severity": "WARN",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:48:51 ERROR [redis-cache] Memory usage exceeds threshold: 80%",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:49:57 WARN [nginx-ingress] 502 Bad Gateway: service not available",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:50:53 ERROR [kubernetes-controller] Unable to reconcile service: resource not found",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:51:59 ERROR [postgres-primary] Failed to allocate memory: insufficient system resources",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [nginx-ingress] Unable to allocate memory for cache: address 0x0000000000000000",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 WARN [redis-cache] Memory usage is at 95%, consider increasing allocation settings",
+    "severity": "WARN",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [kube-apiserver] Connection to etcd at http://127.0.0.1:2379 failed: dial tcp 127.0.0.1:2379: connect: connection refused",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 FATAL [postgres-primary] Database shutdown initiated due to critical failure: postgres: FATAL: database is being recovered",
+    "severity": "FATAL",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [nginx-ingress] Failed to serve request: timeout while waiting for response from upstream server: nginx: [warn] upstream sent too big body",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 WARN [redis-cache] Redis is currently experiencing 150 message queuing delays",
+    "severity": "WARN",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [etcd] Connection to etcd at http://127.0.0.1:23790 failed: dial tcp 127.0.0.1:23790: connect: connection refused",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [kubelet] Failed to connect to API server: dial tcp 127.0.0.1:10250: connect: connection refused",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [nginx-ingress] Internal error occurred: panic: runtime error: invalid memory address or nil pointer dereference",
+    "severity": "ERROR",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-replica] Failed to open database connection: error connecting to database: dial tcp 127.0.0.1:5432: connect: connection refused",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-primary] Connection pool exhausted: max_connections=100 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:20 WARN [nginx-ingress] Request timeout for 127.0.0.1:443, request took 500 ms",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:42:25 FATAL [kube-apiserver] Unable to process request: rpc error: code = Internal desc = Failed to create pod: PodSpec is not valid: cannot use IPv6 for host network with IPv4 container",
+    "severity": "FATAL",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:30 ERROR [redis-cache] Memory limit exceeded: allocated 98% of 1GB",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:35 ERROR [postgres-replica] Failed to apply backup: error code 500",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:40 WARN [nginx-ingress] Slow request detected: 500 ms spent on response",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:42:45 ERROR [etcd] Internal error: failed to send response to client: client error 500",
+    "severity": "ERROR",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:42:50 ERROR [redis-cache] Key 'user_passwords' expired after 60 seconds",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:55 ERROR [kubernetes-dashboard] Internal error: failed to create service: service already exists",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:43:00 ERROR [postgres-primary] Authentication failure for user 'admin': invalid password",
+    "severity": "ERROR",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-primary] Connection pool exhausted: max_connections=100 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:45:23 WARN [nginx-ingress] Request timeout: 500 ms response time, client IP: 192.168.33.12",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:47:38 ERROR [redis-cache] Failed to connect to Redis: connection refused",
+    "severity": "ERROR",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:49:45 WARN [kubelet] Node resource limits exceeded: CPU=80%, Memory=60%",
+    "severity": "WARN",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:51:02 ERROR [etcd] Internal error: unable to sync leader election: dial tcp: i/o timeout",
+    "severity": "ERROR",
+    "category": "security"
+  },
+  {
+    "log_line": "2024-01-15 03:53:16 ERROR [kube-apiserver] Authentication failure: invalid token: token not found in the cache",
+    "severity": "ERROR",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:55:21 WARN [kubernetes-dashboard] Internal error: cannot connect to UI server: dial tcp 192.168.33.13:8443: i/o timeout",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:57:29 ERROR [nginx-ingress] Failed to load configuration: invalid configuration: missing upstream definition",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 04:00:35 WARN [postgres-replica] Disk I/O error: retrying in 10 seconds",
+    "severity": "WARN",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 04:02:43 ERROR [redis-cache] Internal error: unable to parse response from Redis: invalid command",
+    "severity": "ERROR",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [nginx-ingress] Failed to allocate SSL certificate for domain example.com: port 443 already in use by another service",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 04:05:23 WARN [redis-cache] Redis instance reached max memory usage: 85% of 10GB allocated",
+    "severity": "WARN",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 04:12:09 ERROR [postgres-primary] Connection pool for user 'admin' exhausted: max_connections=50 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 04:20:56 WARN [etcd] Connection timeout occurred while trying to contact the peer at address 192.168.99.100:2380",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 04:27:35 FATAL [kube-apiserver] Failed to start server: unable to initialize service: network problem: listen tcp 0.0.0.0:6443: bind: address already in use",
+    "severity": "FATAL",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 04:32:21 WARN [redis-cache] Redis instance is using 75% of the allocated memory: 3GB out of 4GB",
+    "severity": "WARN",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 04:39:06 WARN [nginx-ingress] Unable to allocate SSL certificate for domain example.org: 400 Internal Server Error: Invalid certificate request",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 04:46:52 ERROR [postgres-primary] Failed to connect to database: connection refused",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 04:53:38 ERROR [etcd] Failed to add node to cluster: network problem: dial tcp 192.168.99.101:2380: connect: connection refused",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 05:00:14 ERROR [kubernetes-dashboard] Failed to authenticate user 'john.doe': invalid credentials",
+    "severity": "ERROR",
+    "category": "security"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [redis-cache] Connection count reached max: 1024 connections",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:43:01 WARN [kubelet] Failed to fetch pod metadata for pod: nginx-ingress-7896778598-lm99j",
+    "severity": "WARN",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:45:23 ERROR [postgres-primary] Unable to allocate memory for connection pool, retry in 10 seconds",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:45:35 WARN [etcd] Connection to peer at 10.1.2.3:2380 failed: dial tcp 10.1.2.3:2380: i/o timeout",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:47:02 ERROR [nginx-ingress] Failed to serve TLS: x509: certificate signed by unknown authority",
+    "severity": "ERROR",
+    "category": "security"
+  },
+  {
+    "log_line": "2024-01-15 03:47:46 ERROR [redis-cache] Redis cache is unavailable, retrying in 30 seconds",
+    "severity": "ERROR",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:48:11 ERROR [kubernetes-controller-manager] Failed to update node status: node 'node1' is not reachable",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:48:45 WARN [nginx-ingress] Failed to handle request: server sent HTTP status code 503",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:49:06 ERROR [etcd] Leader election timeout, no current leader available",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:50:31 ERROR [postgres-replica] Failed to sync data from master: timeout waiting for confirmation",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [nginx-ingress] Failed to allocate memory for buffer: Address 0x12345678 already in use",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 FATAL [postgres-primary] Connection pool exhausted: max_connections=100 reached",
+    "severity": "FATAL",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 WARN [redis-cache] Redis cache server shutdown due to low memory: memory usage 85%",
+    "severity": "WARN",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [kubelet] Failed to start container for pod: invalid image tag 'latest': invalid reference format",
+    "severity": "ERROR",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [etcd] Unable to write to etcd, network error: connection reset by peer",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [kubernetes-api] HTTP request timeout for endpoint: request took 1000ms",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 FATAL [postgres-replica] Received unexpected EOF from database",
+    "severity": "FATAL",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 WARN [nginx-ingress] Request to unknown service: Service not found in DNS",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [redis-cache] Cache miss for key 'user_data': Cache not available",
+    "severity": "ERROR",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 WARN [kubernetes-api] Pod 'myapp' requires resource limits exceeding available nodes",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-primary] Connection pool exhausted: max_connections=100 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:45:23 WARN [redis-cache] Redis server shutdown initiated due to low memory: 500MB remaining",
+    "severity": "WARN",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:50:01 FATAL [nginx-ingress] Failed to allocate SSL certificate: error 404 - not found in file system",
+    "severity": "FATAL",
+    "category": "security"
+  },
+  {
+    "log_line": "2024-01-15 04:05:32 ERROR [kube-apiserver] Unable to create request queue: request queue already exists",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 04:10:26 WARN [etcd] Key rotation initiated for service-id: 1234567890: password expires in 2 hours",
+    "severity": "WARN",
+    "category": "security"
+  },
+  {
+    "log_line": "2024-01-15 04:15:08 ERROR [postgres-replica] Failed to allocate connection: all connections are busy",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 04:20:19 WARN [redis-cache] Redis cache reached 90% capacity: 300 items in use out of 400 total",
+    "severity": "WARN",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 04:25:02 ERROR [nginx-ingress] Inbound traffic blocked due to missing SSL certificate: check your certificate chain",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 04:30:45 ERROR [etcd] Key rotation initiated for service-id: 2021234567: password expires in 2 hours",
+    "severity": "ERROR",
+    "category": "security"
+  },
+  {
+    "log_line": "2024-01-15 04:35:28 WARN [postgres-primary] Query timeout occurred: query execution time exceeds 10 seconds",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-primary] Connection pool exhausted: max_connections=100 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:20 FATAL [kubernetes] Unable to fetch pod status: timeout waiting for API response",
+    "severity": "FATAL",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:25 WARN [redis-cache] Redis server 192.168.99.10:6379 is slow to respond, latency 100ms",
+    "severity": "WARN",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:42:30 ERROR [nginx-ingress] Failed to allocate memory for request processing, available memory 200MB",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:35 ERROR [postgres-primary] Failed to connect to database, error: connection refused",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:40 WARN [etcd] etcd server received unexpected request from client 192.168.99.11:54321",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:42:45 ERROR [kubernetes] Unable to apply config map: permission denied",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:50 ERROR [redis-cache] Redis server 192.168.99.11:6379 is unreachable, timeout 5s",
+    "severity": "ERROR",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:42:55 WARN [nginx-ingress] Unexpected error handling request, error: invalid response from backend",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:43:00 FATAL [etcd] etcd server encountered internal error: cannot acquire lock",
+    "severity": "FATAL",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-primary] Connection pool exhausted: max_connections=100 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:43:32 WARN [nginx-ingress] Request took 500ms to process",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:44:29 ERROR [redis-cache] Redis server down, unable to connect, last error: connection refused",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:45:16 ERROR [etcd] Internal error: unable to communicate with member 3: dial tcp: lookup member3: no such host",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:46:05 FATAL [kube-apiserver] Failed to authorize request: unauthorized: authentication failure",
+    "severity": "FATAL",
+    "category": "security"
+  },
+  {
+    "log_line": "2024-01-15 03:46:47 WARN [postgres-replica] Disk I/O error: write failed: Input/output error",
+    "severity": "WARN",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:47:35 WARN [nginx-ingress] SSL handshake error: certificate chain processing failed",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:48:24 ERROR [redis-cache] Redis server timeout, retry in 5s",
+    "severity": "ERROR",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:49:11 ERROR [etcd] Internal error: unable to communicate with member 4: dial tcp: lookup member4: no such host",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:50:00 ERROR [postgres-primary] Failed to allocate memory: out of memory",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-primary] Connection pool exhausted: max_connections=100 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 04:12:32 WARN [redis-cache] Redis server down, attempting to connect to backup instance",
+    "severity": "WARN",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 05:01:20 FATAL [kube-apiserver] Failed to process request, service temporarily unavailable",
+    "severity": "FATAL",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 05:30:45 ERROR [nginx-ingress] Internal server error: 500",
+    "severity": "ERROR",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 06:05:12 ERROR [etcd] Internal error: unable to sync data, retrying in 5s",
+    "severity": "ERROR",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 06:21:03 WARN [postgres-replica] Memory usage at 80%, consider increasing swap space",
+    "severity": "WARN",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 07:00:29 ERROR [etcd] Internal error: unable to communicate with peers, network issue detected",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 07:15:36 ERROR [redis-cache] Failed to connect to Redis, port 6379 unreachable",
+    "severity": "ERROR",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 07:45:01 WARN [kubelet] Warning: Failed to mount VolumeMount, missing volume 'data' in pod 'my-app-5678-xyz'",
+    "severity": "WARN",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 08:02:55 FATAL [nginx-ingress] TLS handshake failed, SSL connection broken",
+    "severity": "FATAL",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [redis-cache] Redis server shutdown: maximum active clients reached",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 04:20:52 FATAL [kube-apiserver] Internal server error occurred: unable to parse request body",
+    "severity": "FATAL",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 05:01:30 WARN [nginx-ingress] High CPU usage on worker process: cpu_utilization_percentage=85%",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 05:22:45 ERROR [postgres-primary] Connection pool exhausted: max_connections=100 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 06:14:01 FATAL [etcd] Internal error: could not write to etcd, retrying in 5 seconds",
+    "severity": "FATAL",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 06:37:26 ERROR [redis-cache] Memory usage exceeds threshold: used_memory=500MB of 1000MB",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 07:08:59 WARN [kubernetes-dashboard] Connection refused to dashboard service: connection timed out",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 07:40:15 FATAL [nginx-ingress] Failed to load TLS certificate: missing certificate file",
+    "severity": "FATAL",
+    "category": "security"
+  },
+  {
+    "log_line": "2024-01-15 08:12:32 ERROR [etcd] Connection to etcd cluster lost: etcd_health_check_fail",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 08:44:59 ERROR [postgres-replica] Data inconsistency detected: last_received_sequence=123456",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-primary] Connection pool exhausted: max_connections=100 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:45:29 WARN [nginx-ingress] Request timeout: 30s",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:50:01 FATAL [etcd] Leader election timeout: cluster size=3, timeout=20s",
+    "severity": "FATAL",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 04:01:22 ERROR [redis-cache] Memory limit exceeded: free memory=50MB, max memory=100MB",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 04:03:39 WARN [kube-apiserver] API rate limit exceeded: 10 requests in 1s",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 04:09:15 ERROR [postgres-replica] Unable to connect to primary: host unreachable:192.168.1.100:5432",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 04:12:47 ERROR [etcd] Internal error: unable to read configuration file: open /etc/etcd/etcd.conf: no such file or directory",
+    "severity": "ERROR",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 04:17:06 WARN [nginx-ingress] SSL certificate error: unable to verify the first certificate",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 04:20:34 ERROR [redis-cache] Redis server down: host unreachable:192.168.1.200:6379",
+    "severity": "ERROR",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 04:23:45 ERROR [kube-apiserver] Failed to authorize request: authorization failure",
+    "severity": "ERROR",
+    "category": "security"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [postgres-primary] Connection pool exhausted: max_connections=100 reached",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:44:29 WARN [nginx-ingress] HTTP request timeout: 500 Internal Server Error, duration=3000ms",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:50:06 FATAL [etcd] Member {\"id\":\"2e2e2e2e2e2e2e2e\",\"addr\":\"10.0.0.5:2379\",\"peerURLs\":[\"http://10.0.0.4:2380\",\"http://10.0.0.6:2380\"]} is unreachable for 5 attempts, cluster leader is unreachable, member is being removed",
+    "severity": "FATAL",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 04:01:21 ERROR [redis-cache] Failed to allocate memory: memory address=0x12345678, size=123456 bytes",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 04:10:32 WARN [kube-apiserver] Pod admission control failed: pod has invalid annotations, annotations=[\"foo\",\"bar\"]",
+    "severity": "WARN",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 04:18:05 ERROR [postgres-replica] Failed to connect to master: connection refused, error code=110, host=10.0.0.2, port=5432",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 04:25:16 WARN [nginx-ingress] HTTP request rate exceeds limit: 10 requests per second for the last 10 seconds",
+    "severity": "WARN",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 04:33:27 ERROR [etcd] Member {\"id\":\"3e3e3e3e3e3e3e3e\",\"addr\":\"10.0.0.6:2379\",\"peerURLs\":[\"http://10.0.0.5:2380\",\"http://10.0.0.4:2380\"]} is unreachable for 5 attempts, cluster leader is unreachable, member is being removed",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 04:40:38 FATAL [redis-cache] Redis server is unresponsive: timeout=30s, retries=5, error code=20001",
+    "severity": "FATAL",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 04:48:09 ERROR [postgres-primary] Failed to establish new connection: connection refused, error code=10061",
+    "severity": "ERROR",
+    "category": "database"
+  },
+  {
+    "log_line": "2024-01-15 03:42:17 ERROR [redis-cache] Connection pool exhausted: max_connections=50 reached, retrying in 10s",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:43:05 FATAL [kube-apiserver] Failed to serve request: unable to read object: permission denied",
+    "severity": "FATAL",
+    "category": "security"
+  },
+  {
+    "log_line": "2024-01-15 03:44:23 WARN [postgres-primary] Query timeout exceeded, query: SELECT * FROM users LIMIT 1000",
+    "severity": "WARN",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:45:12 ERROR [nginx-ingress] Failed to connect to backend service: connection reset by peer",
+    "severity": "ERROR",
+    "category": "network"
+  },
+  {
+    "log_line": "2024-01-15 03:46:09 ERROR [etcd] Could not replicate data: partitioned",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:47:01 ERROR [redis-cache] Memory limit exceeded: free memory=20MB, max memory=50MB, current usage=40MB",
+    "severity": "ERROR",
+    "category": "memory"
+  },
+  {
+    "log_line": "2024-01-15 03:48:18 WARN [kubelet] Container disk space usage at 85%, warning threshold: 80%",
+    "severity": "WARN",
+    "category": "storage"
+  },
+  {
+    "log_line": "2024-01-15 03:49:04 ERROR [etcd] Internal error: unable to serve client request: service unavailable",
+    "severity": "ERROR",
+    "category": "kubernetes"
+  },
+  {
+    "log_line": "2024-01-15 03:50:02 ERROR [postgres-replica] Failed to sync with primary: network error: connection refused",
+    "severity": "ERROR",
+    "category": "application"
+  },
+  {
+    "log_line": "2024-01-15 03:51:11 FATAL [kube-apiserver] Out of memory: unable to allocate request, service overloaded",
+    "severity": "FATAL",
+    "category": "memory"
+  }
+]
