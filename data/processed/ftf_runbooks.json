@@ -1,0 +1,2753 @@
+[
+  {
+    "runbook_id": "FTF-RB-01",
+    "title": "PostgreSQL max_connections exhausted",
+    "category": "database",
+    "team": "payments-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "Prometheus alert: postgresql_max_connections_exhausted",
+      "Grafana dashboard: PostgreSQL Metrics -> 'Max Connections Used' metric spikes to 100%",
+      "User-facing issues: delayed or failed transactions, increased latency in payment processing"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl exec -it <postgres-pod> -- psql -c 'SHOW max_connections;'` to check current max_connections setting",
+      "step 2: `kubectl exec -it <postgres-pod> -- psql -c 'SELECT usename, count(*) FROM pg_stat_activity GROUP BY usename ORDER BY count DESC;'` to identify high-usage connections",
+      "step 3: Decision point - if max_connections is reached and high-usage connections are identified, proceed to resolution steps"
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl exec -it <postgres-pod> -- psql -c 'SET max_connections = 200;'` to increase max_connections temporarily",
+      "step 2: Monitor for stability and performance; if issues persist, consider scaling PostgreSQL resources",
+      "step 3: `kubectl exec -it <postgres-pod> -- psql -c 'SHOW max_connections;'` to verify new setting"
+    ],
+    "escalation": "When to escalate: If max_connections is consistently reached and increasing it does not resolve the issue, page the SRE on-call. Specific threshold: 95% max_connections usage for 10 consecutive minutes.",
+    "rollback": "Exact rollback procedure: `kubectl exec -it <postgres-pod> -- psql -c 'SET max_connections = 150;'` to revert to previous setting if the increase makes the situation worse.",
+    "prevention": "Specific technical improvement to prevent recurrence: Implement connection pooling in application services to reduce the number of concurrent database connections and monitor application performance to optimize resource usage.",
+    "related_alerts": [
+      "PromQL alert: postgresql_max_connections_exhausted",
+      "Grafana dashboard: PostgreSQL Metrics -> 'Max Connections Used'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-02",
+    "title": "PostgreSQL disk full on WAL directory",
+    "category": "database",
+    "team": "payments-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "Prometheus alert: 'postgres_wal_directory_usage' exceeds 80%",
+      "Grafana dashboard: 'PostgreSQL WAL Directory Usage' shows >80% usage",
+      "User facing issues: Payment processing delays or failures"
+    ],
+    "diagnosis_steps": [
+      "kubectl exec -it <postgres-pod> -- psql -c \"SELECT * FROM pg_stat_wal_;\"",
+      "Check the output for 'location' and 'written' to identify the current WAL usage",
+      "If usage is high, decide on the next steps: increase storage, optimize WAL archiving, or scale out"
+    ],
+    "resolution_steps": [
+      "kubectl exec -it <postgres-pod> -- psql -c \"SELECT pg_stop_backup();\"",
+      "Scale out the PostgreSQL deployment to add more storage",
+      "Verify with 'kubectl exec -it <postgres-pod> -- psql -c \"SELECT * FROM pg_stat_wal_;\"' that usage has decreased"
+    ],
+    "escalation": "If the issue persists and usage continues to rise, escalate to the SRE lead at FinTechFlow when 'postgres_wal_directory_usage' exceeds 90%",
+    "rollback": "If the fix makes the situation worse, rollback to the previous state by restoring from a backup and scaling back the deployment",
+    "prevention": "Implement automated WAL archiving and regular storage capacity checks to prevent future issues",
+    "related_alerts": [
+      "postgres_wal_directory_usage",
+      "postgres_disk_space"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-03",
+    "title": "PostgreSQL replication lag exceeded threshold",
+    "category": "database",
+    "team": "payments-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "Prometheus alert: `postgresql_replication_lag_seconds{instance=\"replica-instance\"} > 60`",
+      "Grafana dashboard: `Replication Lag` panel shows > 60 seconds lag",
+      "User facing impact: Transaction processing delays or failures"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl exec -it postgresql-replica-0 -- psql -c \"SHOW replica_identity\"` to check replica identity",
+      "step 2: Look for output indicating `replica_identity` is set correctly, if not, it may be a configuration issue",
+      "step 3: If replica identity is correct, check `kubectl get pods -l app=postgresql -o jsonpath='{.items[0].status.containerStatuses[0].ready}'` to ensure the replica pod is healthy"
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl exec -it postgresql-replica-0 -- psql -c \"SELECT * FROM pg_stat_replication\"` to check replication status",
+      "step 2: If replication is lagging, restart the replica pod with `kubectl delete pod postgresql-replica-0`",
+      "step 3: `kubectl get pods -l app=postgresql -o jsonpath='{.items[0].status.phase}'` to verify the new replica is running and healthy"
+    ],
+    "escalation": "escalate to on-call SRE team if the lag persists after 15 minutes, page `payments-sre` team",
+    "rollback": "exact rollback procedure: `kubectl replace -f <replica-pod-definition.yaml>` with the previous working definition, then restart the pod",
+    "prevention": "implement automatic failover and health checks for PostgreSQL replicas, and regularly review and update PostgreSQL configuration",
+    "related_alerts": [
+      "Prometheus alert: `postgresql_replication_lag_seconds{instance=\"replica-instance\"} > 60`",
+      "Grafana dashboard: `PostgreSQL Replication Health`"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-04",
+    "title": "PostgreSQL deadlock storm on transactions table",
+    "category": "database",
+    "team": "payments-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "Alert fired in PagerDuty"
+    ],
+    "diagnosis_steps": [
+      "Check Grafana dashboard"
+    ],
+    "resolution_steps": [
+      "Follow standard procedure"
+    ],
+    "escalation": "Escalate to payments-sre lead after 15 mins",
+    "prevention": "Add monitoring threshold"
+  },
+  {
+    "runbook_id": "FTF-RB-05",
+    "title": "PgBouncer connection pooler unresponsive",
+    "category": "database",
+    "team": "payments-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: pgbouncer_stats metrics showing high backend_close_count or low connection_count",
+      "specific symptom 2 with metric name or log pattern: Error logs in /var/log/pgbouncer containing 'Connection refused' or 'No available connections'",
+      "specific symptom 3 user facing impact: Increased latency in payment-service and order-service, potentially leading to failed transactions"
+    ],
+    "diagnosis_steps": [
+      "step 1: kubectl exec -it pgbouncer-0 -c 'pgbouncer_admin stats' to check the status of the PgBouncer pooler",
+      "step 2: Look for any errors or warnings in the pgbouncer.log file, and check the stats for backend_close_count and connection_count",
+      "step 3: Decision point - if backend_close_count is high and connection_count is low, proceed to resolution steps"
+    ],
+    "resolution_steps": [
+      "step 1: Restart the PgBouncer pod using kubectl: kubectl delete pod pgbouncer-0",
+      "step 2: Monitor the restart process and ensure the new pod comes up without errors",
+      "step 3: Verify the health of the connection pooler using: kubectl exec -it pgbouncer-1 -c 'pgbouncer_admin stats' and check for normal connection_count and low backend_close_count"
+    ],
+    "escalation": "When to escalate: If the issue persists after 15 minutes, page the on-call SRE and SRE Lead",
+    "rollback": "Exact rollback procedure if fix makes situation worse: Revert to the previous PgBouncer pod if the new one fails to start or shows similar issues",
+    "prevention": "Specific technical improvement to prevent recurrence: Implement automatic scaling for PgBouncer based on transaction load and monitor resource usage more closely",
+    "related_alerts": [
+      "PromQL alert name: pgbouncer_backend_close_count_high",
+      "alert name 2: pgbouncer_connection_count_low"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-06",
+    "title": "PostgreSQL autovacuum bloat degrading query performance",
+    "category": "database",
+    "team": "payments-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "Alert fired in PagerDuty"
+    ],
+    "diagnosis_steps": [
+      "Check Grafana dashboard"
+    ],
+    "resolution_steps": [
+      "Follow standard procedure"
+    ],
+    "escalation": "Escalate to payments-sre lead after 15 mins",
+    "prevention": "Add monitoring threshold"
+  },
+  {
+    "runbook_id": "FTF-RB-07",
+    "title": "PostgreSQL backup job failing silently",
+    "category": "database",
+    "team": "payments-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: backup job duration spikes to 0 seconds and no new backup files appear in the backup directory.",
+      "specific symptom 2 with metric name or log pattern: 'pg_basebackup failed with error: <error_message>' in the Kubernetes pod logs.",
+      "specific symptom 3 user facing impact: No impact to users, but the backup job is not functioning as expected, which could lead to data loss in case of a disaster."
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl -n <namespace> logs <pod-name>` to check the PostgreSQL backup pod logs for any error messages.",
+      "step 2: `kubectl -n <namespace> exec <pod-name> -- psql -c \"SELECT * FROM pg_stat_wal_receiver;\"` to check the status of the WAL receiver.",
+      "step 3: Decision point - If the logs indicate a connection issue or an error with pg_basebackup, proceed with resolution steps. If the issue is with the PostgreSQL instance, contact the database team."
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl -n <namespace> exec <pod-name> -- pg_basebackup -h <hostname> -D /var/lib/postgresql/backup -U <username> -P <password> -Fp` to manually run the backup command.",
+      "step 2: Verify the backup files in the backup directory and ensure they are not corrupted.",
+      "step 3: `kubectl -n <namespace> exec <pod-name> -- psql -c \"SELECT * FROM pg_wal_summary;\"` to check the status of the WAL receiver and ensure it is running correctly."
+    ],
+    "escalation": "When to escalate: If the issue persists after manual intervention, escalate to the database team. Page the on-call SREs at FinTechFlow.",
+    "rollback": "Exact rollback procedure if fix makes situation worse: Stop the faulty backup job, revert to the last known good backup, and restart the backup job.",
+    "prevention": "Specific technical improvement to prevent recurrence: Implement a monitoring solution to alert on backup job failures and ensure regular health checks of the PostgreSQL instance and backup process.",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: `pg_backup_job_duration{job=\"pg_backup\"} > 5`",
+      "alert name 2: `pg_backup_job_status{job=\"pg_backup\"} == 0`"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-08",
+    "title": "PostgreSQL slow queries causing timeout cascade",
+    "category": "database",
+    "team": "payments-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "High CPU usage on PostgreSQL pods as seen in Prometheus",
+      "Error logs in Kubernetes cluster showing slow query timeouts",
+      "User reports delayed or failed transactions through merchant API"
+    ],
+    "diagnosis_steps": [
+      "step 1: kubectl -n <namespace> get pods -l app=postgres -o wide; psql -h <pod_ip> -U <username> -d <database> -c \"SELECT * FROM pg_stat_statements WHERE calls > 10 AND total_time > 1000 ORDER BY total_time DESC;\"",
+      "step 2: Look for queries with high total_time and calls; check the query execution plans and indexes",
+      "step 3: If slow queries are identified, decide whether to optimize queries or scale resources"
+    ],
+    "resolution_steps": [
+      "step 1: Run EXPLAIN ANALYZE <slow_query> to understand the execution plan and identify bottlenecks",
+      "step 2: Optimize the slow query or add indexes, then verify with EXPLAIN ANALYZE",
+      "step 3: Scale PostgreSQL resources if necessary, using kubectl scale deployment <postgres-deployment> --replicas=<new_replicas>"
+    ],
+    "escalation": "If the query optimization or scaling does not resolve the issue within 30 minutes, page the SRE team lead or on-call SRE.",
+    "rollback": "If the fix makes the situation worse, rollback to the previous state by reverting the changes in Kubernetes and monitoring for a short period.",
+    "prevention": "Implement query monitoring and optimization policies, and regularly review and optimize database queries.",
+    "related_alerts": [
+      "Prometheus alert: postgres_cpu_high",
+      "Grafana dashboard: postgres_slow_queries"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-09",
+    "title": "PostgreSQL streaming replication slot bloat",
+    "category": "database",
+    "team": "payments-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "High CPU usage on the PostgreSQL replica as seen in Prometheus",
+      "Increased latency in read operations from the replica with metric name `db.replica.latency`",
+      "Users experiencing delays or errors in read operations from the replica"
+    ],
+    "diagnosis_steps": [
+      "step 1: Run `SELECT * FROM pg_stat_replication;` to check for active replication slots",
+      "step 2: Look for slots with high `active` status and large `active_xmin` values",
+      "step 3: If a slot is found with high `active_xmin` and `active` status, it indicates bloat"
+    ],
+    "resolution_steps": [
+      "step 1: Run `SELECT pg_drop_replication_slot('slot_name');` to drop the problematic slot",
+      "step 2: Monitor the `pg_stat_replication` view to ensure the slot has been dropped",
+      "step 3: Verify the replica's health with `pg_is.replica` and `pg_wal_size`"
+    ],
+    "escalation": "If the bloat persists or causes significant performance degradation, escalate to the SRE on-call at FinTechFlow",
+    "rollback": "If the resolution makes the situation worse, revert the `pg_drop_replication_slot` command and monitor the replica health closely",
+    "prevention": "Implement automated scripts to regularly check and drop inactive replication slots",
+    "related_alerts": [
+      "db.replica.latency",
+      "db.replica.cpu_usage"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-10",
+    "title": "PostgreSQL sequence overflow risk",
+    "category": "database",
+    "team": "payments-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "High CPU usage on PostgreSQL nodes as seen in Prometheus",
+      "Error messages in PostgreSQL logs such as 'sequence overflow'",
+      "Decreased performance and potential service downtime affecting users"
+    ],
+    "diagnosis_steps": [
+      "step 1: Run `kubectl get pods -n <namespace>` to identify affected PostgreSQL pods",
+      "step 2: Use `kubectl exec -it <pod_name> -n <namespace> -- psql -c 'SELECT * FROM information_schema.sequences WHERE sequence_name LIKE 'your_sequence_name''` to check sequence status",
+      "step 3: If sequence overflow is confirmed, check the application logs for related transactions"
+    ],
+    "resolution_steps": [
+      "step 1: Increase the sequence's maximum value with `ALTER SEQUENCE <sequence_name> RESTART WITH <new_max_value>;`",
+      "step 2: Monitor the application for any issues post-restart",
+      "step 3: Verify with `SELECT nextval('<sequence_name>')` that the sequence has been correctly reset"
+    ],
+    "escalation": "If the issue persists or affects more than 10% of transactions, page the on-call engineer at FinTechFlow",
+    "rollback": "If the fix makes the situation worse, revert the sequence change using `ALTER SEQUENCE <sequence_name> RESTART WITH <original_max_value>;` and monitor for any additional issues",
+    "prevention": "Implement sequence health checks as part of regular database maintenance and set up alerts in Prometheus and Grafana",
+    "related_alerts": [
+      "Prometheus alert: postgresql_sequence_overflow",
+      "Grafana dashboard: Database Health Metrics"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-11",
+    "title": "Redis maxmemory eviction storm",
+    "category": "database",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "high Redis memory usage as seen in Prometheus metrics",
+      "increased eviction rate in Redis logs",
+      "slow performance and timeouts in application services"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get pods -n <namespace>` to check Redis pod status",
+      "step 2: `kubectl exec -it <redis-pod> -n <namespace> -- redis-cli info memory` to check memory usage and evictions",
+      "step 3: Decision point - if eviction rate is high and memory usage is close to max, proceed to resolution"
+    ],
+    "resolution_steps": [
+      "step 1: Increase Redis maxmemory setting in `redis.conf` or use `kubectl edit configmap <redis-configmap> -n <namespace>`",
+      "step 2: Follow up with capacity planning and scaling of Redis deployment",
+      "step 3: `kubectl exec -it <redis-pod> -n <namespace> -- redis-cli info memory` to verify new settings and healthy output"
+    ],
+    "escalation": "If the issue persists and causes service degradation, escalate to P2 severity and page on-call SREs and senior leadership",
+    "rollback": "If the fix makes the situation worse, revert to previous configuration using `kubectl edit configmap <redis-configmap> -n <namespace>` and monitor for further issues",
+    "prevention": "Implement automated monitoring for Redis memory usage and evictions, and set up alerts in Prometheus and Grafana",
+    "related_alerts": [
+      "Prometheus alert: redis_memory_usage_high",
+      "Grafana dashboard: Redis Memory Usage and Evictions"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-12",
+    "title": "Redis cluster node failure and failover",
+    "category": "database",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: 'redis_cluster_node_down' alert firing",
+      "specific symptom 2 with metric name or log pattern: 'redis_cluster_node_failure' log pattern in EKS cluster logs",
+      "specific symptom 3 user facing impact: Increased latency in payment-service and order-service"
+    ],
+    "diagnosis_steps": [
+      "step 1: exact kubectl, psql, redis-cli or AWS CLI command to run: `kubectl get pods -n <namespace>` to check running pods",
+      "step 2: what output to look for and what it means: Look for any pods in a 'CrashLoopBackOff' state or with 'Terminating' status",
+      "step 3: decision point - what determines next action: If a node is down, proceed to the resolution steps"
+    ],
+    "resolution_steps": [
+      "step 1: exact remediation command with explanation: `kubectl delete pod <pod-name> -n <namespace>` to restart the pod",
+      "step 2: follow-up action: Check the pod's logs using `kubectl logs <pod-name> -n <namespace>` for any error messages",
+      "step 3: verification command and expected healthy output: `kubectl get pods -n <namespace>` should show all pods in 'Running' state and `redis-cli -h <master-ip> -p 6379 cluster nodes` should show all nodes in the cluster"
+    ],
+    "escalation": "when to escalate: If the node failure persists and affects more than 50% of the cluster, page the on-call SRE team",
+    "rollback": "exact rollback procedure if fix makes situation worse: `kubectl rollout undo deployment/<service-deployment-name> -n <namespace>` to revert to the previous deployment version",
+    "prevention": "specific technical improvement to prevent recurrence: Implement automatic node replacement in the Kubernetes cluster using StatefulSets and DaemonSets",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: 'redis_cluster_node_down'",
+      "alert name 2: 'redis_cluster_node_failure'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-13",
+    "title": "Redis sentinel failover not completing",
+    "category": "database",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "Specific symptom 1 as seen in Prometheus or PagerDuty: High latency or increased error rate in Redis operations.",
+      "Specific symptom 2 with metric name or log pattern: Redis Sentinel failover state showing 'failover-not-complete' in Prometheus metrics or log messages indicating failure to promote a new master.",
+      "Specific symptom 3 user facing impact: Payment processing delays or failures due to Redis unavailability."
+    ],
+    "diagnosis_steps": [
+      "Step 1: Run `kubectl get pods -l app=redis-sentinel` to check the status of Redis sentinel pods.",
+      "Step 2: Check the output for any pods in a 'CrashLoopBackOff' state or with 'Last State' showing 'terminated' with exit code 137 (memory issue) or 1 (general error).",
+      "Step 3: Decision point - If a sentinel pod is in a 'CrashLoopBackOff' state, proceed to step 4; otherwise, check the logs using `kubectl logs <pod-name> -c <container-name>` for errors."
+    ],
+    "resolution_steps": [
+      "Step 1: Execute `kubectl delete pod <pod-name> -c <container-name>` to forcefully delete the failing sentinel pod and allow Kubernetes to recreate it.",
+      "Step 2: Follow-up action: Monitor the system for any further issues and ensure the new sentinel pod is functioning correctly.",
+      "Step 3: Run `redis-cli sentinel master <master-name>` to check the current state of the master and verify that the failover is complete."
+    ],
+    "escalation": "When to escalate: If the failover does not complete within 30 minutes, page the on-call SRE team and senior management.",
+    "rollback": "Exact rollback procedure if fix makes situation worse: If the new sentinel pod fails to resolve the issue, revert to the previous working state by rolling back the deployment and monitoring for any regressions.",
+    "prevention": "Specific technical improvement to prevent recurrence: Implement automatic scaling for Redis sentinel pods based on resource usage and configure proper resource limits to prevent memory issues.",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: 'redis_sentinel_failover_timeout'",
+      "alert name 2: 'redis_sentinel_master_down'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-14",
+    "title": "Redis cache stampede after flush",
+    "category": "database",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: Increased request latency and error rate in payment-service and order-service",
+      "specific symptom 2 with metric name or log pattern: High CPU and I/O usage reported by Prometheus for Redis pods",
+      "specific symptom 3 user facing impact: Delayed payment processing and order confirmation for merchants"
+    ],
+    "diagnosis_steps": [
+      "step 1: exact kubectl, psql, redis-cli or AWS CLI command to run: `kubectl get pods -n redis; kubectl exec -it <redis-pod-name> -n redis -- redis-cli info`",
+      "step 2: what output to look for and what it means: Check `used_memory` and `used_memory_peak` to see if they are abnormally high, and `connected_clients` to see if there are many clients connected",
+      "step 3: decision point - what determines next action: If `used_memory` is significantly higher than usual and `connected_clients` are high, proceed to resolution steps"
+    ],
+    "resolution_steps": [
+      "step 1: exact remediation command with explanation: `kubectl exec -it <redis-pod-name> -n redis -- redis-cli flushall` to flush the cache, and `kubectl scale deployment <redis-deployment-name> -n redis --replicas=0` and `--replicas=1` to restart the Redis pod",
+      "step 2: follow-up action: Monitor the Redis pod for any errors or issues after restart",
+      "step 3: verification command and expected healthy output: `kubectl exec -it <redis-pod-name> -n redis -- redis-cli info` should show normal memory usage and connected clients, and `kubectl get pods -n redis` should show the Redis pod is running without errors"
+    ],
+    "escalation": "when to escalate: specific threshold and who to page at FinTechFlow: If the issue persists or worsens, page the on-call SRE or the team lead",
+    "rollback": "exact rollback procedure if fix makes situation worse: `kubectl scale deployment <redis-deployment-name> -n redis --replicas=0` and `--replicas=<previous-replica-count>` to revert the changes",
+    "prevention": "specific technical improvement to prevent recurrence: Implement rate limiting and retry mechanisms in the services using Redis to prevent stampedes, and consider using a more robust caching strategy",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: `redis_memory_usage_high`",
+      "alert name 2: `redis_connections_high`"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-15",
+    "title": "Redis AOF rewrite causing disk I/O saturation",
+    "category": "database",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "High disk I/O usage as seen in Prometheus metrics",
+      "Errors in Redis logs indicating AOF rewrite process",
+      "User facing issues such as delayed notifications or payment processing"
+    ],
+    "diagnosis_steps": [
+      "Step 1: Run `kubectl get pods -n <namespace>` to identify the Redis pod experiencing issues",
+      "Step 2: Execute `kubectl exec -it <redis-pod-name> -n <namespace> -- redis-cli info` and look for `aof_rewrite_in_progress` and `used_memory_rss`",
+      "Step 3: If `aof_rewrite_in_progress` is true and `used_memory_rss` is high, decide to scale Redis or adjust AOF settings"
+    ],
+    "resolution_steps": [
+      "Step 1: Scale Redis deployment by running `kubectl scale deployment <redis-deployment-name> --replicas=<new-replica-count> -n <namespace>`",
+      "Step 2: Monitor the situation and consider adjusting Redis AOF settings such as `appendfsync everysec`",
+      "Step 3: Verify the resolution by checking `kubectl exec -it <redis-pod-name> -n <namespace> -- redis-cli info` for reduced `used_memory_rss` and no `aof_rewrite_in_progress`"
+    ],
+    "escalation": "If the issue persists and causes disk I/O to exceed 80% for more than 15 minutes, page the on-call SRE team and key stakeholders.",
+    "rollback": "If the fix makes the situation worse, rollback to the previous state by scaling down the Redis deployment and reverting AOF settings to their original values.",
+    "prevention": "Implement monitoring for AOF rewrite frequency and size, and set up automated scaling policies based on disk I/O usage.",
+    "related_alerts": [
+      "Prometheus alert: high_disk_io_usage",
+      "Grafana dashboard: redis_aof_rewrite_metrics"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-16",
+    "title": "Elasticsearch heap exhaustion",
+    "category": "database",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "Heap usage alerts in Prometheus with metric name `elasticsearch_heap_used_in_bytes` exceeding 90%",
+      "Elasticsearch log patterns indicating `heap space exhaustion` or `GC overhead limit exceeded`",
+      "User facing impact including slower search queries and potential service downtime"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get pods -n es` to identify the affected Elasticsearch pod",
+      "step 2: `kubectl exec -it <pod-name> -n es -- curl -XGET 'http://localhost:9200/_nodes/stats/jvm?pretty'` to check JVM heap statistics",
+      "step 3: Decision point - if JVM heap usage is above 90% or GC overhead is high, proceed to resolution"
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl exec -it <pod-name> -n es -- curl -XPUT 'http://localhost:9200/_cluster/settings' -H 'Content-Type: application/json' -d '{\"transient\": {\"cluster.routing.allocation.enable\": \"none\"}}'` to pause allocation for 10 minutes",
+      "step 2: Increase JVM heap size using `kubectl edit statefulset <statefulset-name> -n es` and add or modify `resources.limits` and `resources.requests` for `heap`",
+      "step 3: `kubectl exec -it <pod-name> -n es -- curl -XPUT 'http://localhost:9200/_cluster/settings' -H 'Content-Type: application/json' -d '{\"transient\": {\"cluster.routing.allocation.enable\": \"all\"}}'` to resume allocation"
+    ],
+    "escalation": "When JVM heap usage exceeds 95% or GC overhead limit is triggered, page the on-call SRE",
+    "rollback": "If the fix makes the situation worse, revert the change by halting the statefulset edit and reverting the `heap` settings",
+    "prevention": "Implement automatic monitoring and alerts for Elasticsearch heap usage, and regularly review and adjust resource limits",
+    "related_alerts": [
+      "PromQL alert: `elasticsearch_heap_usage_over_90%`",
+      "Grafana dashboard: `Elasticsearch Heap Usage Monitoring`"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-17",
+    "title": "Elasticsearch circuit breaker triggered",
+    "category": "database",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "Alert fired in PagerDuty"
+    ],
+    "diagnosis_steps": [
+      "Check Grafana dashboard"
+    ],
+    "resolution_steps": [
+      "Follow standard procedure"
+    ],
+    "escalation": "Escalate to platform-sre lead after 15 mins",
+    "prevention": "Add monitoring threshold"
+  },
+  {
+    "runbook_id": "FTF-RB-18",
+    "title": "Elasticsearch shard allocation failed",
+    "category": "database",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "Elasticsearch cluster health shows yellow or red status in Kibana",
+      "Prometheus alert: 'elasticsearch_shard_allocation_failures' with increasing count",
+      "User reports slow search performance or timeouts"
+    ],
+    "diagnosis_steps": [
+      "step 1: Run `kubectl get pods -n <namespace>` to check Elasticsearch pod status",
+      "step 2: Check Elasticsearch logs with `kubectl logs <pod-name> -n <namespace>` for shard allocation failures",
+      "step 3: Evaluate cluster health in Kibana under the Monitoring section"
+    ],
+    "resolution_steps": [
+      "step 1: Run `kubectl exec -it <pod-name> -n <namespace> -- curl -XGET 'localhost:9200/_cluster/allocation/explain'` to diagnose the issue",
+      "step 2: Adjust shard allocation settings with `kubectl exec -it <pod-name> -n <namespace> -- curl -XPUT 'localhost:9200/_cluster/settings' -H 'Content-Type: application/json' -d '{\"transient\": {\"cluster.routing.allocation.enable\": \"all\"}}'`",
+      "step 3: Verify shard allocation with `kubectl exec -it <pod-name> -n <namespace> -- curl -XGET 'localhost:9200/_cluster/allocation/explain'` and check for healthy status"
+    ],
+    "escalation": "If the issue persists for more than 30 minutes, escalate to the on-call SRE team and SRE lead",
+    "rollback": "Rollback the cluster settings to previous values if the fix makes the situation worse",
+    "prevention": "Implement automatic scaling and monitoring for Elasticsearch shards",
+    "related_alerts": [
+      "PromQL alert: 'elasticsearch_shard_allocation_failures'",
+      "Grafana dashboard: Elasticsearch Cluster Health"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-19",
+    "title": "Elasticsearch index corruption recovery",
+    "category": "database",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: Elasticsearch cluster health status shows yellow or red.",
+      "specific symptom 2 with metric name or log pattern: Elasticsearch logs show errors like 'index corruption detected' or 'data recovery failed'.",
+      "specific symptom 3 user facing impact: Users report delays or failures in transaction processing."
+    ],
+    "diagnosis_steps": [
+      "step 1: kubectl get pods -n es-cluster -l app=elasticsearch to check the status of Elasticsearch pods.",
+      "step 2: kubectl logs <pod-name> -n es-cluster to view logs for specific pod and look for error messages related to index corruption.",
+      "step 3: kubectl exec -it <pod-name> -n es-cluster -- /usr/share/elasticsearch/bin/elasticsearch-keystore list to check if any critical settings are missing or altered."
+    ],
+    "resolution_steps": [
+      "step 1: kubectl exec -it <pod-name> -n es-cluster -- /usr/share/elasticsearch/bin/elasticsearch-reset-password --anonymize to reset any compromised passwords.",
+      "step 2: Follow the steps in the Elasticsearch documentation to perform a recovery from a backup or reindexing if necessary.",
+      "step 3: kubectl exec -it <pod-name> -n es-cluster -- /usr/share/elasticsearch/bin/elasticsearch-keystore list to verify that all critical settings are correctly set."
+    ],
+    "escalation": "when to escalate: If the issue persists after the initial steps and affects more than 10% of the transactions, page the on-call SRE. Specific threshold: 10% transaction failure rate. Who to page: On-call SRE at FinTechFlow.",
+    "rollback": "exact rollback procedure if fix makes situation worse: If the reindexing or recovery process causes further issues, revert to the last known good state using a backup from before the corruption was detected.",
+    "prevention": "specific technical improvement to prevent recurrence: Implement regular automated backups and use snapshot and restore procedures. Ensure that critical settings are stored in a secure location and are not manually altered.",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: es_cluster_health_status_alert",
+      "alert name 2: es_index_recovery_failure_alert"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-20",
+    "title": "Elasticsearch cluster split-brain recovery",
+    "category": "database",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: Elasticsearch cluster health shows yellow or red status",
+      "specific symptom 2 with metric name or log pattern: Elasticsearch cluster logs show 'split brain' or 'master not found' errors",
+      "specific symptom 3 user facing impact: Increased latency or failure in transaction processing and order fulfillment"
+    ],
+    "diagnosis_steps": [
+      "step 1: kubectl get pods -n <namespace> -o wide to check Elasticsearch pod status and IP addresses",
+      "step 2: kubectl logs <pod_name> -n <namespace> to check Elasticsearch logs for 'split brain' or 'master not found' errors",
+      "step 3: decision point - if the master node is lost or if there are conflicting master nodes, proceed to resolution steps"
+    ],
+    "resolution_steps": [
+      "step 1: kubectl exec -it <master_pod> -n <namespace> -- /usr/share/elasticsearch/bin/elasticsearch-reset-primary-shards <index_name> to reset primary shards",
+      "step 2: follow-up action: wait for the Elasticsearch cluster to recover and check cluster health using kubectl exec -it <master_pod> -n <namespace> -- /usr/share/elasticsearch/bin/elasticsearch-cluster-health",
+      "step 3: verification command and expected healthy output: kubectl exec -it <master_pod> -n <namespace> -- /usr/share/elasticsearch/bin/elasticsearch-cluster-health --wait-for-green-status"
+    ],
+    "escalation": "when to escalate: if the cluster does not recover within 30 minutes, page the on-call SRE and SRE lead",
+    "rollback": "exact rollback procedure if fix makes situation worse: revert the reset-primary-shards command and follow the recovery steps for a failed master node",
+    "prevention": "specific technical improvement to prevent recurrence: implement Elasticsearch cluster health monitoring and alerts, and ensure proper quorum settings",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: elasticsearch_cluster_health",
+      "alert name 2: elasticsearch_split_brain"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-21",
+    "title": "AWS ALB all targets unhealthy",
+    "category": "network",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "High number of unhealthy targets in Prometheus or PagerDuty alerts",
+      "ALB health check failures as seen in AWS CloudWatch metrics",
+      "User-facing service downtime or degraded performance"
+    ],
+    "diagnosis_steps": [
+      "step 1: Run `kubectl get svc -n <namespace>` to check the status of the services",
+      "step 2: Look for `UNHEALTHY` status in the output to identify the unhealthy targets",
+      "step 3: Determine if the issue is with the backend services or the load balancer configuration"
+    ],
+    "resolution_steps": [
+      "step 1: Run `kubectl delete pod -n <namespace> <pod-name>` to restart the unhealthy pods",
+      "step 2: Monitor the pods for successful restart and check the logs using `kubectl logs <pod-name> -n <namespace>`",
+      "step 3: Verify the health of the ALB targets using `aws elbv2 describe-target-health --target-group-arn <target-group-arn>` and expect to see `Healthy` status"
+    ],
+    "escalation": "If the issue persists after 30 minutes, escalate to the on-call lead SRE and SRE manager",
+    "rollback": "If the fix makes the situation worse, revert to the previous healthy state using the `kubectl` commands to restart the pods",
+    "prevention": "Implement automatic scaling for the services to handle unexpected traffic spikes and ensure regular health checks are in place",
+    "related_alerts": [
+      "PromQL alert for high ALB target health issues",
+      "Grafana dashboard for ALB health status"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-22",
+    "title": "Route53 DNS resolution failure",
+    "category": "network",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "High alert count in Prometheus for DNS resolution timeouts",
+      "Failed request logs in CloudWatch showing 'NXDOMAIN' or 'timed out' errors",
+      "User reports inability to access services, e.g., 502 Bad Gateway errors in application logs"
+    ],
+    "diagnosis_steps": [
+      "step 1: Run `kubectl get svc -n <namespace>` to check the status of the services",
+      "step 2: Check Route53 health checks and DNS resolution status via AWS CLI: `aws route53 list-hosted-zones-by-name --name <domain-name>`",
+      "step 3: If DNS resolution fails, decide whether to update Route53 records or investigate underlying issues"
+    ],
+    "resolution_steps": [
+      "step 1: Update Route53 DNS records if incorrect, using `aws route53 change-resource-record-sets --hosted-zone-id <zone-id> --change-batch file://change-set.json`",
+      "step 2: Verify DNS changes with `nslookup` or `dig` command",
+      "step 3: Confirm services are accessible, e.g., `curl http://<service-endpoint>` should return expected response"
+    ],
+    "escalation": "If DNS resolution remains unresolved for 30 minutes, page the on-call SRE team and escalate to senior management",
+    "rollback": "If the fix causes further issues, revert to previous DNS settings using the AWS Route53 console or CLI",
+    "prevention": "Implement DNS monitoring with Prometheus and Grafana to proactively detect and alert on DNS resolution issues",
+    "related_alerts": [
+      "DNSResolutionTimeouts",
+      "Route53HealthCheckFailures"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-23",
+    "title": "Kafka consumer group lag critical",
+    "category": "network",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: `kafka_consumer_lag` alert firing with a high value.",
+      "specific symptom 2 with metric name or log pattern: `Kafka consumer group 'group_name' lag is over 10000 messages` in logs.",
+      "specific symptom 3 user facing impact: Delayed or failed transactions for services dependent on Kafka topics."
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get pods -n kafka` to check if the consumer pods are running.",
+      "step 2: `kubectl logs <consumer-pod-name> -n kafka` to check for any errors or warnings.",
+      "step 3: Decision point - if the pod is running and there are no errors, investigate the Kafka cluster health."
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl exec -it <consumer-pod-name> -n kafka -- /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server <kafka-broker> --describe --group <consumer-group>` to check the lag.",
+      "step 2: Follow-up action: If the lag is due to network issues, contact network team; if due to consumer configuration, adjust the consumer settings.",
+      "step 3: `kubectl exec -it <consumer-pod-name> -n kafka -- /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server <kafka-broker> --reset-offsets --group <consumer-group> --to-earliest --execute --topic <topic-name>` to reset offsets if necessary."
+    ],
+    "escalation": "When to escalate: If the lag persists for more than 30 minutes, page the on-call SRE team.",
+    "rollback": "Exact rollback procedure if fix makes situation worse: Revert the changes made in the resolution steps and revert to the previous state.",
+    "prevention": "Specific technical improvement to prevent recurrence: Implement automatic scaling for Kafka consumers based on lag metrics and improve network monitoring.",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: `kafka_consumer_lag_high`",
+      "alert name 2: `kafka_consumer_group_down`"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-24",
+    "title": "Kafka broker disk full",
+    "category": "network",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "Disk usage alert in Prometheus with metric name `kafka_broker_disk_usage` exceeds 90%",
+      "Log pattern in Kafka broker logs showing `disk space exceeded`",
+      "User facing issues with delayed or failed transactions"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get pv,pvc -n kafka` to check persistent volume claims and their usage",
+      "step 2: `kubectl describe pvc -n kafka` to inspect the PVC details and find the full one",
+      "step 3: If full, check the logs with `kubectl logs <broker-pod-name> -n kafka` for more details"
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl scale statefulset --replicas=0 -n kafka` to take the broker down for maintenance",
+      "step 2: Expand the persistent volume or reclaim unused space",
+      "step 3: `kubectl scale statefulset --replicas=1 -n kafka` to bring the broker back online"
+    ],
+    "escalation": "When disk usage exceeds 95%, page the on-call SRE team and relevant stakeholders",
+    "rollback": "If the fix makes the situation worse, revert to the previous state by reducing the replica count",
+    "prevention": "Implement automated disk usage monitoring and alerts, and configure automatic scaling or backup strategies",
+    "related_alerts": [
+      "Prometheus alert `kafka_broker_disk_usage_high`",
+      "Grafana dashboard `Kafka Disk Usage Monitoring`"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-25",
+    "title": "Kafka partition leadership rebalance",
+    "category": "network",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "Alert fired in PagerDuty"
+    ],
+    "diagnosis_steps": [
+      "Check Grafana dashboard"
+    ],
+    "resolution_steps": [
+      "Follow standard procedure"
+    ],
+    "escalation": "Escalate to platform-sre lead after 15 mins",
+    "prevention": "Add monitoring threshold"
+  },
+  {
+    "runbook_id": "FTF-RB-26",
+    "title": "Cloudflare SSL certificate expired",
+    "category": "network",
+    "team": "security-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "Prometheus alert: 'cloudflare_ssl_certificate_expiring' firing",
+      "PagerDuty alert: 'Cloudflare SSL Certificate Expiring'",
+      "User facing impact: HTTPS connections timing out or failing due to certificate errors"
+    ],
+    "diagnosis_steps": [
+      "step 1: kubectl get certificates -n <namespace> -o json | jq '.items[] | select(.metadata.name == \"<certificate-name>\") | .status.notAfter'",
+      "step 2: Check the output to determine if the certificate is expiring or has expired",
+      "step 3: Decision point - If the certificate has expired, proceed to resolution steps; otherwise, monitor until it does"
+    ],
+    "resolution_steps": [
+      "step 1: Run 'cloudflare ssl:install --domain=<domain> --key=<key-file> --cert=<cert-file> --fullchain=<fullchain-file>'",
+      "step 2: Verify the new certificate is installed by checking the Cloudflare dashboard or running 'kubectl get certificates -n <namespace> -o json'",
+      "step 3: kubectl get certificates -n <namespace> -o json | jq '.items[] | select(.metadata.name == \"<certificate-name>\") | .status.conditions[] | select(.type == \"CertificateValid\") | .status'",
+      "expected healthy output: 'True'"
+    ],
+    "escalation": "When to escalate: If the certificate cannot be renewed within 24 hours, page the on-call SRE team at FinTechFlow",
+    "rollback": "Exact rollback procedure: Revert to the previous valid certificate by running 'cloudflare ssl:install --domain=<domain> --key=<previous-key-file> --cert=<previous-cert-file> --fullchain=<previous-fullchain-file>'",
+    "prevention": "Specific technical improvement to prevent recurrence: Automate the Cloudflare SSL certificate renewal process using a script or CI/CD pipeline",
+    "related_alerts": [
+      "PromQL alert: 'cloudflare_ssl_certificate_expiring'",
+      "Grafana dashboard: 'SSL Certificates Expiring'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-27",
+    "title": "Cloudflare false positive blocking payments",
+    "category": "network",
+    "team": "security-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "High payment failure rate as seen in Prometheus with metric name `payment_service_failures`",
+      "Increased error logs in PagerDuty with pattern `502 Bad Gateway` from payment-service",
+      "Decreased transaction volume as reported by merchant-api"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get pods -n production` to list affected pods",
+      "step 2: `kubectl logs <payment-service-pod> -n production` to check for Cloudflare-related errors",
+      "step 3: Decision point - if Cloudflare logs indicate a false positive, proceed to resolution"
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl edit servicepayment-service -n production` to modify Cloudflare DNS settings",
+      "step 2: Monitor Cloudflare dashboard for any new false positives and update rules if necessary",
+      "step 3: `kubectl get pods -n production` and `kubectl get svc -n production` to ensure changes took effect and services are healthy"
+    ],
+    "escalation": "When to escalate: If the issue persists for more than 30 minutes, page the on-call SRE and Security team leads",
+    "rollback": "Exact rollback procedure: Revert Cloudflare DNS settings to previous values if the fix makes the situation worse, and monitor for 15 minutes",
+    "prevention": "Specific technical improvement to prevent recurrence: Implement automated Cloudflare rule verification using a custom script or CI/CD pipeline",
+    "related_alerts": [
+      "PromQL alert name `payment_service_high_failures`",
+      "Grafana dashboard name `transaction_performance_overview`"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-28",
+    "title": "AWS NAT Gateway port exhaustion",
+    "category": "network",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: high NAT gateway error rate on Prometheus dashboard",
+      "specific symptom 2 with metric name or log pattern: Increased error logs in CloudWatch with pattern 'NAT Gateway limit exceeded'",
+      "specific symptom 3 user facing impact: Delayed or failed external API calls, increased latency for outgoing traffic"
+    ],
+    "diagnosis_steps": [
+      "step 1: exact kubectl, psql, redis-cli or AWS CLI command to run: `aws ec2 describe-nat-gateways --nat-gateway-ids <nat-gateway-id> --query 'NatGateways[0].NatGatewayAddresses[0].PublicIp' -o text`",
+      "step 2: what output to look for and what it means: Check the public IP address and NAT gateway status, look for any error messages",
+      "step 3: decision point - what determines next action: If the NAT gateway is in an error state or if the error rate exceeds a certain threshold, proceed to resolution steps"
+    ],
+    "resolution_steps": [
+      "step 1: exact remediation command with explanation: `aws ec2 create-nat-gateway --subnet-id <subnet-id> --allocation-id <allocation-id>`",
+      "step 2: follow-up action: Monitor the new NAT gateway creation and ensure it is operational",
+      "step 3: verification command and expected healthy output: `aws ec2 describe-nat-gateways --nat-gateway-ids <new-nat-gateway-id> --query 'NatGateways[0].NatGatewayAddresses[0].PublicIp' -o text` - Expected output should show the new public IP address and status as 'available'"
+    ],
+    "escalation": "when to escalate: If the issue persists after creating a new NAT gateway, escalate to the platform-sre team lead or SRE on call. Specific threshold: If the error rate remains above 10% for 30 minutes",
+    "rollback": "exact rollback procedure if fix makes situation worse: If the new NAT gateway does not resolve the issue, revert to the previous working state by deleting the new NAT gateway and reverting to the original configuration",
+    "prevention": "specific technical improvement to prevent recurrence: Implement a monitoring solution to proactively detect and alert on NAT gateway health and capacity, and automate the creation of additional NAT gateways based on usage metrics",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: `nat_gateway_error_rate{job=\"aws\"} > 10`",
+      "alert name 2: 'NAT Gateway Limit Exceeded' in CloudWatch"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-29",
+    "title": "AWS Security Group blocking service traffic",
+    "category": "network",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "Alert fired in PagerDuty"
+    ],
+    "diagnosis_steps": [
+      "Check Grafana dashboard"
+    ],
+    "resolution_steps": [
+      "Follow standard procedure"
+    ],
+    "escalation": "Escalate to platform-sre lead after 15 mins",
+    "prevention": "Add monitoring threshold"
+  },
+  {
+    "runbook_id": "FTF-RB-30",
+    "title": "VPC peering route missing",
+    "category": "network",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "Specific symptom 1: High latency or increased error rate in transaction-processing service metrics in Prometheus.",
+      "Specific symptom 2: Logs in Kafka or Redis indicate network connectivity issues.",
+      "Specific symptom 3: User facing impact: Delays or failures in payment processing."
+    ],
+    "diagnosis_steps": [
+      "Step 1: Run `kubectl get svc -n <namespace>` to check service endpoints and `aws ec2 describe-vpc-peering-connections` to verify VPC peering status.",
+      "Step 2: Look for `route table` entries in AWS console or `ip route` command to confirm routes are present and correct.",
+      "Step 3: Decision point - If no route is found, proceed to resolution steps; if route is present, check for network connectivity issues."
+    ],
+    "resolution_steps": [
+      "Step 1: Add missing route using `aws ec2 create-route --route-table-id <route-table-id> --destination-cidr-block <peer-vpc-cidr> --vpc-peering-connection-id <vpc-peering-connection-id>`.",
+      "Step 2: Verify network connectivity and service health.",
+      "Step 3: Run `kubectl get pods -n <namespace>` to confirm all services are up and running, and check service metrics in Prometheus."
+    ],
+    "escalation": "When to escalate: If the issue persists after 30 minutes, page the on-call SRE or the lead of the platform-sre team.",
+    "rollback": "Exact rollback procedure: If the fix makes the situation worse, revert the route addition using `aws ec2 delete-route --route-id <route-id>` and restore the previous network configuration.",
+    "prevention": "Specific technical improvement to prevent recurrence: Implement automated route checks and alerts in CI/CD pipelines and monitoring tools.",
+    "related_alerts": [
+      "Prometheus alert: high-latency-payment-processing",
+      "Grafana dashboard: network-availability-check"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-31",
+    "title": "Kafka producer timeout and backpressure",
+    "category": "network",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "High producer timeout observed in Kafka metrics (prometheus.alerts: kafka_producer_timeout{job='kafka-producer'} > 0)",
+      "Increased producer lag in Kafka metrics (prometheus.alerts: kafka_producer_lag{job='kafka-producer'} > 10000)",
+      "User facing issues such as delayed or failed transaction processing"
+    ],
+    "diagnosis_steps": [
+      "step 1: Run `kubectl get pods -n <namespace>` to check for any failed or unhealthy Kafka producer pods",
+      "step 2: Check Kafka logs using `kubectl logs <pod-name> -n <namespace>` for any errors or warnings related to producer timeout or backpressure",
+      "step 3: Analyze Kafka metrics using `kubectl exec -it <prometheus-pod> -n <namespace> -- prometheus_client_metrics{kafka_producer_timeout='1'}` to identify the root cause"
+    ],
+    "resolution_steps": [
+      "step 1: Scale up the Kafka producer deployment using `kubectl scale deployment <producer-deployment> --replicas=<new-replica-count> -n <namespace>` to increase processing capacity",
+      "step 2: Investigate and resolve any underlying issues causing the backpressure, such as consumer lag or resource constraints",
+      "step 3: Verify the Kafka cluster health using `kubectl exec -it <kafka-pod> -n <namespace> -- kafka-topics --describe <topic-name>` and ensure all partitions are in sync"
+    ],
+    "escalation": "Escalate to the on-call SRE if the issue persists for more than 30 minutes or affects more than 10% of transactions",
+    "rollback": "Rollback to the previous version of the Kafka producer code if the fix exacerbates the issue, using `kubectl rollout undo deployment/<producer-deployment> -n <namespace>`",
+    "prevention": "Implement monitoring and alerting for producer lag and timeout metrics, and configure auto-scaling policies for Kafka producer pods",
+    "related_alerts": [
+      "kafka_producer_timeout",
+      "kafka_producer_lag"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-32",
+    "title": "Kafka offset commit failure",
+    "category": "network",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: `kafka_consumer_lag` metric shows high lag for multiple consumers",
+      "specific symptom 2 with metric name or log pattern: `kafka_consumer_offset_commit_failed` metric shows increasing values over time",
+      "specific symptom 3 user facing impact: Delayed or failed transactions, potential payment processing issues"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get pods -n kafka` to check if any Kafka pods are in error state",
+      "step 2: `kubectl logs <kafka-pod-name> -n kafka` to check for any error messages related to offset commit failures",
+      "step 3: Decision point - if the issue is related to a specific consumer, investigate further by checking the consumer logs and configuration"
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl exec -it <kafka-pod-name> -n kafka -- /opt/kafka/bin/kafka-consumer-groups.sh --describe --group <consumer-group-name> --bootstrap-server <kafka-bootstrap-server>` to manually commit offsets",
+      "step 2: Follow-up action - Investigate the root cause of the offset commit failure, such as network issues, consumer configuration, or Kafka cluster health",
+      "step 3: `kubectl exec -it <kafka-pod-name> -n kafka -- /opt/kafka/bin/kafka-consumer-groups.sh --describe --group <consumer-group-name> --bootstrap-server <kafka-bootstrap-server>` to verify that the offsets have been committed successfully"
+    ],
+    "escalation": "When to escalate: If the issue persists for more than 15 minutes or affects multiple services, page the on-call SREs and the platform engineering lead",
+    "rollback": "Exact rollback procedure if fix makes situation worse: Revert the changes made in the resolution steps and revert to the previous known good state",
+    "prevention": "Specific technical improvement to prevent recurrence: Implement offset commit retry logic in the consumer code, and monitor Kafka cluster health more closely",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: `kafka_consumer_lag_high`",
+      "alert name 2: `kafka_consumer_offset_commit_failed_high`"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-33",
+    "title": "Route53 health check failure causing failover",
+    "category": "network",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "Alert fired in PagerDuty"
+    ],
+    "diagnosis_steps": [
+      "Check Grafana dashboard"
+    ],
+    "resolution_steps": [
+      "Follow standard procedure"
+    ],
+    "escalation": "Escalate to platform-sre lead after 15 mins",
+    "prevention": "Add monitoring threshold"
+  },
+  {
+    "runbook_id": "FTF-RB-34",
+    "title": "AWS ALB target group draining stuck",
+    "category": "network",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "High latency or timeouts observed in Prometheus metrics for the affected service",
+      "Log patterns indicating health checks failing for the service instances in the target group",
+      "User-facing issues such as failed transactions or payment processing delays"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get svc,ing,po -n <namespace>` to check the state of services and pods",
+      "step 2: `aws elb describe-load-balancers` to inspect the ALB configuration and health checks",
+      "step 3: Decision point - If health checks are failing, determine if it's a service issue or an ALB misconfiguration"
+    ],
+    "resolution_steps": [
+      "step 1: `aws elb deregister-instances-from-load-balancer` to manually remove unhealthy instances",
+      "step 2: Investigate the root cause of the issue (e.g., service crashes, network issues)",
+      "step 3: `aws elb register-instances-with-load-balancer` to re-register instances once they are healthy"
+    ],
+    "escalation": "If the issue persists after 30 minutes, escalate to the platform-sre lead and SRE on-call",
+    "rollback": "If the fix makes the situation worse, revert the changes using `aws elb register-instances-with-load-balancer` and investigate further",
+    "prevention": "Implement automated health checks and alerts for service instances, and regularly review ALB configurations",
+    "related_alerts": [
+      "PromQL alert: 'high_latency_for_service'",
+      "Grafana dashboard: 'ALB Health Check Status'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-35",
+    "title": "Cloudflare rate limiting misconfiguration",
+    "category": "network",
+    "team": "security-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "Alert fired in PagerDuty"
+    ],
+    "diagnosis_steps": [
+      "Check Grafana dashboard"
+    ],
+    "resolution_steps": [
+      "Follow standard procedure"
+    ],
+    "escalation": "Escalate to security-sre lead after 15 mins",
+    "prevention": "Add monitoring threshold"
+  },
+  {
+    "runbook_id": "FTF-RB-36",
+    "title": "AWS Transit Gateway route failure",
+    "category": "network",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: 'High packet loss observed between VPCs'",
+      "specific symptom 2 with metric name or log pattern: 'Kubernetes Pod logs showing 'Failed to route traffic to destination' errors'",
+      "specific symptom 3 user facing impact: 'Payment processing delays and failed transactions'"
+    ],
+    "diagnosis_steps": [
+      "step 1: exact kubectl, psql, redis-cli or AWS CLI command to run: 'aws ec2 describe-transit-gateway-attachments --transit-gateway-attachment-ids <tgw-attachment-id>'",
+      "step 2: what output to look for and what it means: 'Check for 'State' field indicating 'failed' or 'deleting' state'",
+      "step 3: decision point - what determines next action: 'If the state is 'failed' or 'deleting', proceed to resolution steps'"
+    ],
+    "resolution_steps": [
+      "step 1: exact remediation command with explanation: 'aws ec2 create-transit-gateway-attachment --transit-gateway-id <tgw-id> --vpc-id <vpc-id> --subnet-ids <subnet-ids>'",
+      "step 2: follow-up action: 'Monitor the new attachment state using 'aws ec2 describe-transit-gateway-attachments' until it reaches 'available' state'",
+      "step 3: verification command and expected healthy output: 'aws ec2 describe-transit-gateway-attachments --transit-gateway-attachment-ids <tgw-attachment-id> --query 'TransitGatewayAttachments[*].State.Name' --output text' should return 'available'"
+    ],
+    "escalation": "when to escalate: 'If the issue persists for more than 30 minutes, page the on-call SREs and senior leadership at FinTechFlow'",
+    "rollback": "exact rollback procedure if fix makes situation worse: 'Revert to the previous working state by creating a snapshot of the problematic VPC and rolling back to a previous known good state'",
+    "prevention": "specific technical improvement to prevent recurrence: 'Implement automated monitoring and alerting for Transit Gateway attachment states and configure regular health checks'",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: 'HighPacketLossBetweenVPCs'",
+      "alert name 2: 'FailedTransitGatewayAttachment'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-37",
+    "title": "Kafka exactly-once semantics violation",
+    "category": "network",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: high Kafka error rate metrics (e.g., `kafka.server:type=BrokerTopicMetrics,name=FetchRequestsPerSec` showing sudden spikes)",
+      "specific symptom 2 with metric name or log pattern: Kafka broker logs showing 'Producer transaction aborted due to timeout' or 'Transaction timeout exceeded' errors",
+      "specific symptom 3 user facing impact: delayed or missing payment processing notifications, increased transaction failure rates"
+    ],
+    "diagnosis_steps": [
+      "step 1: exact kubectl, psql, redis-cli or AWS CLI command to run: `kubectl get pods -n kafka-namespace` to check Kafka pod status",
+      "step 2: what output to look for and what it means: Look for any pods with `CrashLoopBackOff` or `Error` state, indicating potential issues with Kafka brokers",
+      "step 3: decision point - what determines next action: If more than one broker is in error state, proceed to further diagnostics; otherwise, address the single broker issue first"
+    ],
+    "resolution_steps": [
+      "step 1: exact remediation command with explanation: `kubectl delete pod <pod-name> -n kafka-namespace` to restart the problematic Kafka broker",
+      "step 2: follow-up action: Monitor the restarted broker for stability, and check for any additional error logs",
+      "step 3: verification command and expected healthy output: `kubectl get pods -n kafka-namespace` should show all brokers in `Running` state, and Kafka error metrics should normalize"
+    ],
+    "escalation": "when to escalate: If the issue persists after restarting a broker, or if multiple brokers are in error state, escalate to the on-call team via PagerDuty",
+    "rollback": "exact rollback procedure if fix makes situation worse: Roll back to the previous version of the Kafka configuration or rollback the changes that might have caused the issue",
+    "prevention": "specific technical improvement to prevent recurrence: Implement Kafka transactional idempotence and ensure proper transaction management in producers, and configure Kafka with proper retry policies",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: `kafka_error_rate`",
+      "alert name 2: `kafka_transaction_timeout_exceeded`"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-38",
+    "title": "ALB access log delivery failure",
+    "category": "network",
+    "team": "platform-sre",
+    "severity_when_triggered": "P3",
+    "symptoms": [
+      "Prometheus alert 'alb_access_log_delivery_failure' firing",
+      "Grafana dashboard showing 'ALB Access Log Delivery' with a red alert",
+      "User facing impact: payment processing delays or errors"
+    ],
+    "diagnosis_steps": [
+      "step 1: kubectl get svc -n <namespace> -o wide to check ALB status",
+      "step 2: aws elb describe-load-balancers --load-balancer-arn <ALB_ARN> to check ALB logs",
+      "step 3: decision point - if ALB is in an unhealthy state, proceed to resolution steps"
+    ],
+    "resolution_steps": [
+      "step 1: kubectl delete svc <service-name> -n <namespace> to restart the service",
+      "step 2: monitor for any changes in the Prometheus alert",
+      "step 3: verify logs with 'kubectl logs <pod-name> -n <namespace>' to ensure ALB is delivering logs"
+    ],
+    "escalation": "escalate to senior SRE if the issue persists for more than 1 hour or affects >10% of users",
+    "rollback": "if the fix makes the situation worse, revert the changes by re-creating the service and verify the logs again",
+    "prevention": "implement log delivery monitoring and alerting in AWS CloudWatch",
+    "related_alerts": [
+      "Prometheus alert 'alb_access_log_delivery_failure'",
+      "Grafana dashboard 'ALB Log Delivery Monitoring'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-39",
+    "title": "Kafka topic deletion orphaned partitions",
+    "category": "network",
+    "team": "platform-sre",
+    "severity_when_triggered": "P3",
+    "symptoms": [
+      "Specific symptom 1 as seen in Prometheus or PagerDuty: Kafka topic deletion orphaned partitions alerts triggered.",
+      "Specific symptom 2 with metric name or log pattern: Kafka topic deletion orphaned partitions logs showing 'Partition not found' errors.",
+      "Specific symptom 3 user facing impact: Users may experience delayed or failed payment processing."
+    ],
+    "diagnosis_steps": [
+      "Step 1: `kubectl get pods -n kafka-namespace` to list Kafka pods and verify which pod is experiencing the issue.",
+      "Step 2: `kubectl logs <kafka-pod-name> -n kafka-namespace` to check Kafka logs for 'Partition not found' errors.",
+      "Step 3: Decision point - If the issue is confirmed to be related to orphaned partitions, proceed to resolution steps."
+    ],
+    "resolution_steps": [
+      "Step 1: `kafka-topics.sh --delete --topic <topic-name> --bootstrap-server <kafka-bootstrap-server> --delete-retention-ms 0` to forcefully delete the orphaned partitions.",
+      "Step 2: Follow-up action: `kafka-topics.sh --describe --topic <topic-name> --bootstrap-server <kafka-bootstrap-server>` to ensure the topic is recreated without orphaned partitions.",
+      "Step 3: Verification command and expected healthy output: `kafka-topics.sh --describe --topic <topic-name> --bootstrap-server <kafka-bootstrap-server>` should show no orphaned partitions."
+    ],
+    "escalation": "When to escalate: If the issue persists after resolution, page the on-call SREs at FinTechFlow.",
+    "rollback": "Exact rollback procedure if fix makes situation worse: `kafka-topics.sh --create --topic <topic-name> --partitions <num-partitions> --replication-factor <replication-factor> --bootstrap-server <kafka-bootstrap-server>` to recreate the topic with the correct partitions.",
+    "prevention": "Specific technical improvement to prevent recurrence: Implement a Kafka topic deletion and partition management strategy that includes automated checks and alerts for orphaned partitions.",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: `kafka_topic_deletion_orphaned_partitions_alert`",
+      "alert name 2: `kafka_topic_partitions_mismatch_alert`"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-40",
+    "title": "Route53 weighted routing misconfiguration",
+    "category": "network",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "High latency or timeouts for specific services in Prometheus metrics",
+      "Error logs in CloudWatch indicating DNS resolution issues",
+      "User reports delayed or failed transactions in merchant-api"
+    ],
+    "diagnosis_steps": [
+      "step 1: Run `aws route53 list-resource-record-sets --hosted-zone-id <zone-id>` to list current DNS records",
+      "step 2: Look for incorrect weighted routing policies and check the health check status of the records",
+      "step 3: Determine if the misconfiguration is causing DNS resolution issues or traffic imbalance"
+    ],
+    "resolution_steps": [
+      "step 1: Run `aws route53 change-resource-record-sets --hosted-zone-id <zone-id> --change-batch file://path/to/change.json` to correct the misconfiguration",
+      "step 2: Monitor the health check status and traffic distribution for the affected services",
+      "step 3: Run `kubectl get svc` to verify that the services are correctly routing traffic"
+    ],
+    "escalation": "If the misconfiguration persists or causes more than 10% of transactions to fail, page the on-call SRE",
+    "rollback": "If the fix makes the situation worse, revert the changes using the `aws route53 change-resource-record-sets` command with the previous configuration file",
+    "prevention": "Implement automated testing for DNS configurations and regular audits of Route53 settings",
+    "related_alerts": [
+      "PromQL alert for high transaction failure rate",
+      "Grafana dashboard for Route53 health checks"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-41",
+    "title": "JVM OOMKilled pod memory limit exceeded",
+    "category": "memory",
+    "team": "payments-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "Prometheus alert: 'jvm_memory_non_heap_used_bytes' exceeds threshold and triggers OOMKilled event",
+      "Kubernetes event log: 'OOMKilled' in pod logs",
+      "User-facing impact: Payment processing delays or failures"
+    ],
+    "diagnosis_steps": [
+      "step 1: kubectl get pods -n <namespace> -o json | jq '.items[].status.containerStatuses[].state.terminated.reason' to check for OOMKilled events",
+      "step 2: psql -h <db-host> -U <db-user> -d <db-name> -c 'SELECT * FROM performance_metrics WHERE metric_name = 'jvm_memory_non_heap_used_bytes'' to review recent metric values",
+      "step 3: Decision point - if the memory usage consistently exceeds the pod's limit, proceed to resolution steps"
+    ],
+    "resolution_steps": [
+      "step 1: kubectl edit deployment <service-name> -n <namespace> to increase the memory limit in the deployment YAML",
+      "step 2: Monitor the service for a period to ensure stability",
+      "step 3: kubectl get pods -n <namespace> -o json | jq '.items[].status.containerStatuses[].state.running' to verify the pod is running healthy"
+    ],
+    "escalation": "escalate to on-call SRE team when OOMKilled events occur consistently over 5 minutes, page SRE Lead and SRE Manager",
+    "rollback": "if the increased memory limit causes issues, rollback by reverting to previous deployment version using kubectl rollout undo deployment <service-name> -n <namespace>",
+    "prevention": "implement automatic scaling based on JVM memory usage metrics and review application code for memory leaks",
+    "related_alerts": [
+      "PromQL alert: 'jvm_memory_non_heap_used_bytes_over_limit'",
+      "Grafana dashboard: 'Memory Usage Metrics'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-42",
+    "title": "Java GC overhead limit exceeded",
+    "category": "memory",
+    "team": "payments-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "High GC activity observed in Prometheus metrics with high values in 'java_gc_overhead_limit_exceeded' metric",
+      "Error logs showing 'GC Overhead Limit Exceeded' in Java application logs",
+      "User facing delays or failures in payment processing"
+    ],
+    "diagnosis_steps": [
+      "step 1: kubectl exec -it <pod_name> -- jstat -gcutil <pid> 1000 10 to check GC utilization",
+      "step 2: Look for high values in 'S0' and 'S1' (Survivor spaces) and 'E' (Eden space) indicating high GC activity",
+      "step 3: Decision point - If high GC activity persists and Eden space usage is consistently high, increase heap size"
+    ],
+    "resolution_steps": [
+      "step 1: kubectl edit deployment <service_name> - add or modify JAVA_OPTS to increase heap size, e.g., -Xms4g -Xmx8g",
+      "step 2: Monitor the service for 24 hours to ensure the issue is resolved",
+      "step 3: kubectl top pod <pod_name> to check memory usage and ensure it is within expected limits"
+    ],
+    "escalation": "If symptoms persist after 24 hours, escalate to the SRE lead or senior management",
+    "rollback": "If the change makes the situation worse, revert the JAVA_OPTS change using kubectl edit and monitor for 24 hours",
+    "prevention": "Implement automated heap size tuning based on application load and memory usage metrics",
+    "related_alerts": [
+      "Prometheus alert for high GC overhead limit exceeded",
+      "Grafana dashboard for JVM memory usage and GC metrics"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-43",
+    "title": "Python worker OOM killed by OS",
+    "category": "memory",
+    "team": "payments-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "High CPU usage and memory utilization observed in Prometheus",
+      "OOM kill event logged in Kubernetes pod logs",
+      "User facing delays or failures in transaction processing"
+    ],
+    "diagnosis_steps": [
+      "Step 1: Run `kubectl top pod` to check memory and CPU usage of the affected pod",
+      "Step 2: Inspect pod logs using `kubectl logs <pod-name>` for OOM kill messages",
+      "Step 3: Review recent changes to the service that might have caused increased memory usage"
+    ],
+    "resolution_steps": [
+      "Step 1: Scale down the affected service using `kubectl scale deployment <service-name> --replicas=0`",
+      "Step 2: Investigate the root cause and apply a fix, then scale back using `kubectl scale deployment <service-name> --replicas=<desired-replicas>`",
+      "Step 3: Verify using `kubectl top pod` and check for healthy memory and CPU usage"
+    ],
+    "escalation": "Escalate to on-call team if the issue persists after scaling down and rescaling, or if the service is critical and cannot be scaled down without causing downtime",
+    "rollback": "Roll back to previous code version if the fix introduces new issues, using `git checkout <commit-hash>` and redeploying the service",
+    "prevention": "Implement memory profiling and optimization in the Python worker code, and set up better monitoring for resource usage",
+    "related_alerts": [
+      "Prometheus alert for high memory usage",
+      "Grafana dashboard for Kubernetes resource monitoring"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-44",
+    "title": "JVM metaspace exhaustion",
+    "category": "memory",
+    "team": "payments-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "High JVM metaspace usage as seen in Prometheus metrics (e.g., java.lang:type=Memory/MetaspaceUsed)",
+      "Error messages in logs indicating metaspace overflow (e.g., 'GC overhead limit exceeded')",
+      "User-facing issues such as delayed payments, failed transactions, or service downtime"
+    ],
+    "diagnosis_steps": [
+      "step 1: kubectl exec -it <pod-name> -- jstat -gcutil <pid> 1000 10",
+      "step 2: Look for high MetaspaceUsage percentage and OOM errors in application logs",
+      "step 3: Determine if the issue is critical based on metaspace usage and application availability"
+    ],
+    "resolution_steps": [
+      "step 1: Increase JVM metaspace size by updating the Java options in Kubernetes deployment config (e.g., -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=256m)",
+      "step 2: Apply the updated configuration and monitor the metaspace usage",
+      "step 3: Verify the metaspace usage is within normal limits using Prometheus"
+    ],
+    "escalation": "If metaspace usage exceeds 90% or if the service becomes unavailable, page the on-call SRE team and escalate to the senior SRE lead",
+    "rollback": "If the update makes the situation worse, revert to the previous configuration using kubectl apply -f <config-file>",
+    "prevention": "Implement regular monitoring and tuning of JVM heap and metaspace settings, and use garbage collection tuning strategies",
+    "related_alerts": [
+      "Prometheus alert for high metaspace usage",
+      "Grafana dashboard for JVM metrics"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-45",
+    "title": "Redis maxmemory eviction causing session loss",
+    "category": "memory",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: redis.mem_fragmentation_ratio{job=\"redis\"} > 1.0",
+      "specific symptom 2 with metric name or log pattern: Redis logs showing eviction events, e.g., \"eviction\" in the logs",
+      "specific symptom 3 user facing impact: Users experiencing session timeouts or failed transactions"
+    ],
+    "diagnosis_steps": [
+      "step 1: exact kubectl, psql, redis-cli or AWS CLI command to run: kubectl exec -it <redis-pod> -- redis-cli info",
+      "step 2: what output to look for and what it means: Look for the 'used_memory' and 'maxmemory' values, and the 'evictions' metric to understand the memory usage and eviction events",
+      "step 3: decision point - what determines next action: If 'evictions' is non-zero, proceed to the next steps"
+    ],
+    "resolution_steps": [
+      "step 1: exact remediation command with explanation: kubectl scale statefulset <redis-statefulset> --replicas=<new-replicas-count> to increase Redis memory capacity",
+      "step 2: follow-up action: Monitor the system to ensure the issue is resolved and no further evictions occur",
+      "step 3: verification command and expected healthy output: kubectl exec -it <redis-pod> -- redis-cli info | grep 'evictions' to ensure it is 0"
+    ],
+    "escalation": "when to escalate: If the issue persists after scaling, escalate to the on-call lead or senior SRE. Specific threshold: If the evictions metric remains non-zero for more than 15 minutes, page the on-call team",
+    "rollback": "exact rollback procedure if fix makes situation worse: If scaling does not resolve the issue, rollback by reverting to the previous statefulset configuration using kubectl rollout undo statefulset <redis-statefulset>",
+    "prevention": "specific technical improvement to prevent recurrence: Implement Redis persistence, configure Redis cluster for high availability, and regularly monitor and adjust Redis memory settings",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: redis_max_memory_eviction",
+      "alert name 2: redis_memory_fragmentation"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-46",
+    "title": "Kafka Streams state store OOMKilled",
+    "category": "memory",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: `kafka-streams-state-store-memory-usage` exceeds 90% over a 5-minute interval",
+      "specific symptom 2 with metric name or log pattern: `oom-killer` events logged in `/var/log/syslog`",
+      "specific symptom 3 user facing impact: Payment processing delays or failures for merchants"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get pods -n <namespace>` to identify the affected Kafka Streams pod",
+      "step 2: `kubectl logs <pod-name> -n <namespace>` to review recent logs for `oom-killer` events",
+      "step 3: `kubectl top pod <pod-name> -n <namespace>` to check current memory usage and identify the process causing the OOMKilled event"
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl scale deployment <deployment-name> -n <namespace> --replicas=0` to gracefully shut down the affected pod",
+      "step 2: Review and adjust the Kafka Streams state store configuration to reduce memory usage, e.g., `state.dir` and `segment.bytes`",
+      "step 3: `kubectl scale deployment <deployment-name> -n <namespace> --replicas=<new-replica-count>` to restart the pod with the new configuration"
+    ],
+    "escalation": "when to escalate: If the issue persists after scaling, escalate to the SRE lead or on-call engineer. Specific threshold: `kafka-streams-state-store-memory-usage` exceeds 95% over a 5-minute interval. Who to page: SRE on-call engineer at FinTechFlow",
+    "rollback": "Exact rollback procedure if fix makes situation worse: `kubectl scale deployment <deployment-name> -n <namespace> --replicas=<original-replica-count>` to revert to the previous state",
+    "prevention": "Specific technical improvement to prevent recurrence: Implement dynamic memory tuning based on real-time metrics using Kubernetes Horizontal Pod Autoscaler (HPA) and adjust Kafka Streams state store configurations to optimize memory usage",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: `kafka-streams-state-store-memory-usage-over-90%`",
+      "alert name 2: `oom-killer-event-detected`"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-47",
+    "title": "Elasticsearch field data cache exhaustion",
+    "category": "memory",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "High memory usage as seen in Prometheus metrics (e.g., `node_memory_MemTotal` and `node_memory_MemFree`)",
+      "Elasticsearch cluster alerts in PagerDuty (e.g., `cluster_health` alerts with `status` set to `red` or `yellow`)",
+      "User facing issues such as slow query responses or service downtime"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get pods -n elastic` to check the status of Elasticsearch pods",
+      "step 2: `kubectl logs <elasticsearch-pod> -n elastic` to look for any error messages or warnings",
+      "step 3: `kubectl exec -it <elasticsearch-pod> -n elastic -- curl -XGET 'localhost:9200/_cat/allocations?v'` to check field data cache usage"
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl exec -it <elasticsearch-pod> -n elastic -- curl -XPUT 'localhost:9200/_cluster/settings -H 'Content-Type: application/json' -d '{\"transient\": {\"cluster.routing.allocation.enable\": \"all\"}}'` to temporarily disable shard allocation",
+      "step 2: Scale up Elasticsearch nodes by running `kubectl scale --replicas=<new-number> deployment/<elasticsearch-deployment> -n elastic`",
+      "step 3: `kubectl exec -it <elasticsearch-pod> -n elastic -- curl -XGET 'localhost:9200/_cat/allocation?v'` to verify the field data cache is back to a healthy state"
+    ],
+    "escalation": "When the field data cache usage exceeds 80%, page the on-call SRE team via PagerDuty",
+    "rollback": "If the resolution makes the situation worse, revert to the previous state by scaling down the Elasticsearch nodes and re-enabling shard allocation",
+    "prevention": "Implement automatic scaling policies for Elasticsearch nodes based on field data cache usage metrics",
+    "related_alerts": [
+      "node_memory_usage",
+      "elasticsearch_cluster_health"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-48",
+    "title": "Java thread stack overflow",
+    "category": "memory",
+    "team": "payments-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "High CPU usage on specific pods as seen in Prometheus",
+      "Error logs in Kubernetes with stack trace indicating thread stack overflow",
+      "User facing issues such as delayed transactions and service unavailability"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl top pod` to identify high CPU usage pods",
+      "step 2: `kubectl logs <pod-name>` to review error logs and stack traces",
+      "step 3: Determine if the issue is isolated to a specific service or widespread"
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl exec <pod-name> -c <container-name> -- /bin/bash -c 'kill -9 <PID>'` to forcefully terminate the problematic thread",
+      "step 2: Monitor the service for stability and adjust resource limits if necessary",
+      "step 3: `kubectl get pods -o wide` to check pod status and `kubectl describe pod <pod-name>` for detailed pod health"
+    ],
+    "escalation": "If the issue persists after 30 minutes, escalate to the on-call team and senior SREs at FinTechFlow",
+    "rollback": "If the fix makes the situation worse, revert to the previous working state by restoring the previous deployment version using `kubectl rollout undo`",
+    "prevention": "Implement thread stack size monitoring and adjust JVM settings to prevent future occurrences",
+    "related_alerts": [
+      "Prometheus alert for high CPU usage",
+      "Grafana dashboard for Java thread stack monitoring"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-49",
+    "title": "Node.js heap exhaustion",
+    "category": "memory",
+    "team": "payments-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "Node.js heap size increasing rapidly as seen in Prometheus metrics",
+      "Error logs mentioning 'FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory'",
+      "User-facing service degradation or downtime"
+    ],
+    "diagnosis_steps": [
+      "step 1: Run `kubectl top pod` to check heap usage of the affected Node.js pods",
+      "step 2: Review Node.js error logs from the affected pods to identify the root cause",
+      "step 3: Determine if the issue is due to a specific service or a spike in traffic"
+    ],
+    "resolution_steps": [
+      "step 1: Increase the Node.js heap size by modifying the `--max-old-space-size` parameter in the deployment configuration",
+      "step 2: Monitor the service for stability and ensure no further issues arise",
+      "step 3: Run `kubectl get pods` to confirm the updated configuration is in place and check for healthy pod status"
+    ],
+    "escalation": "If the issue persists despite increasing the heap size, escalate to the team lead at FinTechFlow and page the on-call engineer",
+    "rollback": "If the fix makes the situation worse, revert to the previous configuration using `kubectl edit deployment <service-name>` and monitor the service",
+    "prevention": "Implement resource monitoring and auto-scaling policies for Node.js services to proactively manage memory usage",
+    "related_alerts": [
+      "Node.js_heap_size_alert",
+      "Node.js_error_logs"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-50",
+    "title": "Go goroutine leak causing memory growth",
+    "category": "memory",
+    "team": "payments-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "Prometheus alert: 'go_goroutines' metric shows a steady increase over time",
+      "Grafana dashboard: 'Goroutine Growth' chart indicates a continuous rise in goroutine count",
+      "User facing impact: Slow API response times and potential service downtime"
+    ],
+    "diagnosis_steps": [
+      "Step 1: Run `kubectl top pod <pod-name>` to check CPU and memory usage",
+      "Step 2: Use `kubectl logs <pod-name> -c <container-name>` to find logs with 'goroutine' or 'panic' patterns",
+      "Step 3: Check `kubectl get pods -o wide` for any pod restarts or crashes"
+    ],
+    "resolution_steps": [
+      "Step 1: Identify and fix the leaking goroutine in the codebase, e.g., `context` handling",
+      "Step 2: Deploy the fix to the staging environment for thorough testing",
+      "Step 3: Run `kubectl top pod <pod-name>` and `kubectl logs <pod-name> -c <container-name>` to verify no further leaks"
+    ],
+    "escalation": "If the issue persists after 1 hour, escalate to the on-call SRE team and senior management",
+    "rollback": "Rollback to the previous deployment version if the fix introduces new issues, using `kubectl rollout undo`",
+    "prevention": "Implement code reviews and static code analysis tools to detect potential goroutine leaks",
+    "related_alerts": [
+      "Prometheus alert: 'go_goroutines' threshold breach",
+      "Grafana dashboard: 'Goroutine Growth' chart anomaly"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-51",
+    "title": "EBS volume ENOSPC on PostgreSQL data directory",
+    "category": "storage",
+    "team": "payments-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "Prometheus alert: 'disk_space\u5229\u7528\u7387\u8d85\u8fc780%'",
+      "Grafana dashboard: 'PostgreSQL data directory disk usage' metric shows 100%",
+      "Users report slow transaction processing or payment failures"
+    ],
+    "diagnosis_steps": [
+      "step 1: kubectl exec -it <postgres-pod> -- psql -c 'SELECT pg_table_size(*) FROM pg_tables;'",
+      "step 2: Check the output to identify the largest tables and their sizes",
+      "step 3: If disk usage is high, decide if it's due to a specific table or general growth"
+    ],
+    "resolution_steps": [
+      "step 1: kubectl exec -it <postgres-pod> -- psql -c 'VACUUM FULL;' on the largest tables",
+      "step 2: Consider archiving and purging old data from PostgreSQL",
+      "step 3: Verify with 'df -h' and 'du -sh /var/lib/postgresql/data' that the disk usage is below 80%"
+    ],
+    "escalation": "When disk usage exceeds 90%, page the on-call SRE at FinTechFlow",
+    "rollback": "If the fix makes the situation worse, revert the changes and restore from backup",
+    "prevention": "Implement automated backups and regular disk space monitoring with alerts",
+    "related_alerts": [
+      "PromQL alert: 'disk_space\u5229\u7528\u7387\u8d85\u8fc780%'",
+      "Grafana dashboard: 'PostgreSQL data directory disk usage'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-52",
+    "title": "Kafka log partition filling data disk",
+    "category": "storage",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "Alert fired in PagerDuty"
+    ],
+    "diagnosis_steps": [
+      "Check Grafana dashboard"
+    ],
+    "resolution_steps": [
+      "Follow standard procedure"
+    ],
+    "escalation": "Escalate to platform-sre lead after 15 mins",
+    "prevention": "Add monitoring threshold"
+  },
+  {
+    "runbook_id": "FTF-RB-53",
+    "title": "S3 throttling blocking transaction log pipeline",
+    "category": "storage",
+    "team": "data-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: S3 write operations rate drops significantly, observed in Prometheus alerting rules.",
+      "specific symptom 2 with metric name or log pattern: High latency in Kafka transaction logs, as seen in Kafka consumer lag metrics.",
+      "specific symptom 3 user facing impact: Delayed transaction processing and potential data loss for new transactions."
+    ],
+    "diagnosis_steps": [
+      "step 1: Exact kubectl command to run: `kubectl get pods -n s3-pipeline` to check the status of S3-related pods.",
+      "step 2: What output to look for and what it means: Look for pods in a `CrashLoopBackOff` state or with error messages related to S3 connectivity issues.",
+      "step 3: Decision point - what determines next action: If S3-related pods are in a `CrashLoopBackOff` state, proceed to the next step. Otherwise, check network and S3 service availability."
+    ],
+    "resolution_steps": [
+      "step 1: Exact remediation command with explanation: `kubectl scale deployment s3-pipeline-deployment --replicas=0` to drain the S3 pipeline, followed by `kubectl scale deployment s3-pipeline-deployment --replicas=1` to restart the deployment.",
+      "step 2: Follow-up action: Monitor the S3 pipeline for any errors or issues post-restart.",
+      "step 3: Verification command and expected healthy output: `kubectl get pods -n s3-pipeline` should show all pods in a `Running` state with no error messages."
+    ],
+    "escalation": "when to escalate: If the issue persists after 30 minutes of troubleshooting, escalate to the SRE lead. Specific threshold: 3 consecutive alerts in 15 minutes. Who to page: SRE on-call and DevOps team.",
+    "rollback": "exact rollback procedure if fix makes situation worse: If the fix makes the situation worse, revert the deployment changes by running `kubectl rollout undo deployment s3-pipeline-deployment` and monitor for further issues.",
+    "prevention": "specific technical improvement to prevent recurrence: Implement S3 throttling mitigation strategies such as increasing S3 write throughput capacity, configuring S3 lifecycle policies, and setting up S3 transfer acceleration.",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: `s3_write_operations_rate{namespace='s3-pipeline'} < 1000`",
+      "alert name 2: `kafka_consumer_lag{namespace='transaction-processor'} > 10000`"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-54",
+    "title": "EBS volume stuck in detaching state",
+    "category": "storage",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "EBS volume is showing as 'detaching' in AWS Management Console or CloudWatch logs.",
+      "Prometheus alert: `aws_ebs_volume_state{state=\"detaching\"}`",
+      "User facing impact: Potential service downtime or data loss."
+    ],
+    "diagnosis_steps": [
+      "Step 1: `aws ec2 describe-volumes --volume-ids <volume-id>`",
+      "Step 2: Look for the `State` and `Attachments` fields to determine the current state and any associated instances.",
+      "Step 3: If the volume is still attached to an instance, check the instance state and terminate if necessary."
+    ],
+    "resolution_steps": [
+      "Step 1: `aws ec2 detach-volume --volume-id <volume-id> --force`",
+      "Step 2: Monitor the volume to ensure it transitions to 'available' state.",
+      "Step 3: `aws ec2 describe-volumes --volume-ids <volume-id>` to verify the volume is in 'available' state."
+    ],
+    "escalation": "If the volume does not transition to 'available' state within 15 minutes, escalate to the on-call SRE and SRE Lead.",
+    "rollback": "No specific rollback procedure needed as detaching and re-attaching the volume should resolve the issue.",
+    "prevention": "Implement automated scripts to periodically check and detach volumes stuck in 'detaching' state.",
+    "related_alerts": [
+      "aws_ebs_volume_state_change",
+      "aws_ec2_instance_state_change"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-55",
+    "title": "EBS IOPS limit hit causing I/O wait",
+    "category": "storage",
+    "team": "payments-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "High I/O wait percentage observed in Prometheus metrics",
+      "Increased latency in Kafka message processing as seen in Grafana dashboards",
+      "User reports delayed transaction processing and payment notifications"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get nodes --no-headers -o=custom-columns=NAME:.metadata.name,STATUS:.status.conditions[?(@.type=='Ready')].status` to check node status",
+      "step 2: `aws ec2 describe-ebs-snapshot-status --volume-ids <volume-id> --filters Name=volume-id,Values=<volume-id>` to check EBS snapshot status and IOPS usage",
+      "step 3: Decision point - If IOPS usage is close to or exceeds the limit, proceed to resolution steps"
+    ],
+    "resolution_steps": [
+      "step 1: `aws ec2 modify-volume --volume-id <volume-id> --iops <new-iops-value>` to increase IOPS limit",
+      "step 2: Monitor for any issues post-resolution, update Vault secrets if necessary",
+      "step 3: `kubectl top pod` to verify CPU and memory usage, `kubectl get pods --all-namespaces` to ensure all pods are running"
+    ],
+    "escalation": "If the IOPS limit is consistently exceeded, escalate to the SRE lead and senior management. Page the on-call SRE team if the issue persists beyond 30 minutes.",
+    "rollback": "If the increased IOPS causes further issues, revert the command using `aws ec2 modify-volume --volume-id <volume-id> --iops <original-iops-value>` and monitor for any degradation in performance.",
+    "prevention": "Implement automated monitoring and alerting for EBS IOPS usage. Consider using provisioned IOPS volumes or EBS Cold HDD volumes for less critical services.",
+    "related_alerts": [
+      "Prometheus alert: EBSVolumeIOPSHigh",
+      "Grafana dashboard: EBSVolumePerformance"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-56",
+    "title": "S3 lifecycle policy deleted active data",
+    "category": "storage",
+    "team": "data-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: 's3_delete_active_data' alert firing",
+      "specific symptom 2 with metric name or log pattern: 's3_delete_active_data' alert in Grafana dashboard",
+      "specific symptom 3 user facing impact: Merchant API returns 500 errors due to missing transaction data"
+    ],
+    "diagnosis_steps": [
+      "step 1: exact kubectl, psql, redis-cli or AWS CLI command to run: 'aws s3api list-object-versions --bucket <bucket-name>'",
+      "step 2: what output to look for and what it means: Look for active objects in 'VersionId' column, if missing, lifecycle policy might have deleted them",
+      "step 3: decision point - what determines next action: If active objects are missing, investigate S3 lifecycle policy"
+    ],
+    "resolution_steps": [
+      "step 1: exact remediation command with explanation: 'aws s3api put-lifecycle-configuration --bucket <bucket-name> --configuration file://lifecycle-policy.json'",
+      "step 2: follow-up action: Review and adjust the lifecycle policy to prevent accidental deletion of active data",
+      "step 3: verification command and expected healthy output: 'aws s3api get-lifecycle-configuration --bucket <bucket-name>', expected output should match the updated policy"
+    ],
+    "escalation": "when to escalate: If the issue persists for more than 1 hour, page the on-call SRE team at FinTechFlow",
+    "rollback": "exact rollback procedure if fix makes situation worse: 'aws s3api delete-lifecycle-configuration --bucket <bucket-name>', revert to previous lifecycle policy configuration",
+    "prevention": "specific technical improvement to prevent recurrence: Implement additional checks in the S3 lifecycle policy management process and use versioning and tagging for better data management",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: 's3_delete_active_data'",
+      "alert name 2: 's3_bucket_size_exceeded'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-57",
+    "title": "Elasticsearch translog corruption recovery",
+    "category": "storage",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "High Elasticsearch cluster CPU usage as seen in Prometheus",
+      "Elasticsearch cluster node failures or red status in Kibana",
+      "User reports delayed or missing search results"
+    ],
+    "diagnosis_steps": [
+      "step 1: Run `kubectl get pods -n es-namespace` to check Elasticsearch pod status",
+      "step 2: Check Elasticsearch logs using `kubectl logs <es-pod-name> -n es-namespace` for error messages",
+      "step 3: Evaluate cluster health with `kubectl exec -it <es-pod-name> -n es-namespace -- curl -XGET 'http://localhost:9200/_cluster/health?pretty'`"
+    ],
+    "resolution_steps": [
+      "step 1: Execute `kubectl delete pod <es-pod-name> -n es-namespace` to restart the Elasticsearch pod",
+      "step 2: Monitor cluster recovery and node status",
+      "step 3: Verify cluster health with `kubectl exec -it <es-pod-name> -n es-namespace -- curl -XGET 'http://localhost:9200/_cluster/health?pretty'` and ensure green status"
+    ],
+    "escalation": "If the issue persists after 30 minutes, escalate to the on-call SRE team at FinTechFlow",
+    "rollback": "If the fix makes the situation worse, revert to the previous stable state using the backup from the last scheduled maintenance",
+    "prevention": "Implement regular Elasticsearch snapshot backups and automate the process using Vault for secure storage",
+    "related_alerts": [
+      "Elasticsearch_cluster_health_alert",
+      "Elasticsearch_node_failure_alert"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-58",
+    "title": "PostgreSQL pg_wal filling faster than archiving",
+    "category": "storage",
+    "team": "payments-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "Prometheus alert: 'pg_wal_size_bytes' exceeds 'pg_wal_archive_bytes' by more than 1GB in the last 5 minutes",
+      "Log pattern: 'pg_wal' directory size increase rate higher than 'pg_archival' directory",
+      "User facing impact: Potential data loss, service degradation, or downtime due to insufficient archive storage"
+    ],
+    "diagnosis_steps": [
+      "step 1: kubectl exec -it <pg_pod_name> -- psql -c 'SELECT pg_wal_lsn_diff(pg_current_wal_lsn(), (SELECT last_lsn FROM pg_stat_archiver));'",
+      "step 2: Output shows the difference in LSN between the current WAL and the last archived WAL, indicating the rate of WAL filling vs archiving",
+      "step 3: If the difference is increasing and exceeds 1GB in the last 5 minutes, escalate to the team"
+    ],
+    "resolution_steps": [
+      "step 1: kubectl exec -it <pg_pod_name> -- psql -c 'SELECT pg_start_backup(''basebackup'', true);'",
+      "Explanation: This command initiates a base backup, which can help in quickly archiving the WAL files",
+      "step 2: Increase archive storage capacity or optimize WAL archiving settings",
+      "step 3: Verify with 'kubectl exec -it <pg_pod_name> -- psql -c 'SELECT pg_stop_backup();'' and check if 'pg_wal_size_bytes' and 'pg_wal_archive_bytes' are in sync"
+    ],
+    "escalation": "When to escalate: If the issue persists and the difference between 'pg_wal_size_bytes' and 'pg_wal_archive_bytes' exceeds 5GB in the last 15 minutes, page the on-call SREs and the DBA team",
+    "rollback": "If the fix makes the situation worse, rollback to the previous state using the most recent backup and restore it using 'kubectl exec -it <pg_pod_name> -- psql -c 'SELECT pg_stop_backup();''",
+    "prevention": "Implement regular base backups and optimize WAL archiving settings to ensure consistent archiving rates",
+    "related_alerts": [
+      "Prometheus alert: 'pg_wal_size_bytes_over_archive_bytes'",
+      "Grafana dashboard: 'PostgreSQL WAL Archiving Metrics'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-59",
+    "title": "EBS multi-attach filesystem corruption",
+    "category": "storage",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "Alert fired in PagerDuty"
+    ],
+    "diagnosis_steps": [
+      "Check Grafana dashboard"
+    ],
+    "resolution_steps": [
+      "Follow standard procedure"
+    ],
+    "escalation": "Escalate to platform-sre lead after 15 mins",
+    "prevention": "Add monitoring threshold"
+  },
+  {
+    "runbook_id": "FTF-RB-66",
+    "title": "Kafka log compaction deleting unprocessed messages",
+    "category": "storage",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "High Kafka broker CPU or memory usage as seen in Prometheus or Grafana",
+      "Kafka topic size growth rate metrics exceeding normal thresholds",
+      "User reports delayed or missing payment processing notifications"
+    ],
+    "diagnosis_steps": [
+      "step 1: Run `kubectl get pods -n kafka` to identify the affected Kafka broker",
+      "step 2: Execute `kubectl exec -it <broker-pod-name> -n kafka -- kafka-topics --describe --topic unprocessed-messages` to check topic details",
+      "step 3: Decision point - If unprocessed messages are piling up, consider log compaction"
+    ],
+    "resolution_steps": [
+      "step 1: Use `kubectl exec -it <broker-pod-name> -n kafka -- kafka-configs --alter --topic unprocessed-messages --add-config cleanup.policy=compact,delete.lag.ms=604800000` to enable log compaction",
+      "step 2: Monitor Kafka broker and topic metrics for stabilization",
+      "step 3: Verify by checking `kubectl exec -it <broker-pod-name> -n kafka -- kafka-topics --describe --topic unprocessed-messages` to confirm compaction is active"
+    ],
+    "escalation": "When to escalate: If the issue persists after 1 hour, page the on-call SRE team",
+    "rollback": "Exact rollback procedure: Revert the Kafka topic configuration back to original settings using `kafka-configs` command",
+    "prevention": "Specific technical improvement: Regularly review and adjust Kafka topic configurations to prevent future issues",
+    "related_alerts": [
+      "Prometheus alert: kafka_topic_size_growth",
+      "Grafana dashboard: kafka_broker_cpu_usage"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-61",
+    "title": "Payment service circuit breaker opened",
+    "category": "application",
+    "team": "payments-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "High failure rate of payment service requests as seen in Prometheus or PagerDuty",
+      "Increased latency or timeouts in payment service requests",
+      "User-facing issues such as failed payment attempts or delayed notifications"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get pods -n <namespace>` to check the state of payment service pods",
+      "step 2: `kubectl logs <pod-name> -n <namespace>` to review logs for any errors or warnings",
+      "step 3: `kubectl top pods -n <namespace>` to check resource usage and identify potential bottlenecks"
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl scale deployment payment-service --replicas=0 -n <namespace>` followed by `kubectl scale deployment payment-service --replicas=<desired-replicas> -n <namespace>` to restart the service",
+      "step 2: Monitor the service for stability and ensure it is handling requests without issues",
+      "step 3: `kubectl get pods -n <namespace>` and `kubectl describe pod <pod-name> -n <namespace>` to verify the service is running healthy"
+    ],
+    "escalation": "If the issue persists for more than 30 minutes, escalate to the on-call SRE team and SRE lead at FinTechFlow",
+    "rollback": "If the fix makes the situation worse, revert to the previous stable state using `kubectl rollout undo deployment/payment-service -n <namespace>`",
+    "prevention": "Implement circuit breaker thresholds and monitoring for payment service to proactively handle failures",
+    "related_alerts": [
+      "PromQL alert: payment-service-high-failure-rate",
+      "Grafana dashboard: payment-service-latency-monitoring"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-62",
+    "title": "Fraud detection service timeout cascade",
+    "category": "application",
+    "team": "payments-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "High CPU and memory usage for the fraud-detection-service as seen in Prometheus",
+      "Increased latency and timeout errors in the fraud-detection-service logs",
+      "Decreased transaction throughput and user reports of delayed or failed transactions"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl top pod <fraud-detection-service-pod-name>` to check CPU and memory usage",
+      "step 2: `kubectl logs <fraud-detection-service-pod-name> -f` to look for error patterns or backtraces",
+      "step 3: Decision point - if CPU and memory usage are high and logs indicate timeout issues, proceed to resolution steps"
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl scale deployment fraud-detection-service --replicas=0` to drain the service",
+      "step 2: Apply the latest code changes and redeploy with `kubectl apply -f <deployment-file>.yaml`",
+      "step 3: `kubectl top pod <fraud-detection-service-pod-name>` to verify that the service is running healthy and not hitting resource limits"
+    ],
+    "escalation": "When to escalate: If the issue persists after 30 minutes of investigation and resolution attempts, page the on-call SREs and senior management.",
+    "rollback": "If the fix makes the situation worse, rollback to the previous version using `kubectl rollout undo deployment/fraud-detection-service` and verify with `kubectl top pod <fraud-detection-service-pod-name>`.",
+    "prevention": "Implement resource quotas and limits in Kubernetes to prevent the service from consuming too many resources. Monitor and auto-scale the service based on real-time metrics.",
+    "related_alerts": [
+      "High CPU and Memory Usage Alert for fraud-detection-service",
+      "Timeout Error Alert for fraud-detection-service"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-63",
+    "title": "Transaction processor duplicate payment detection",
+    "category": "application",
+    "team": "payments-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "High rate of duplicate payment alerts in Prometheus or PagerDuty",
+      "Increased latency observed in transaction-processor service metrics",
+      "User reports receiving multiple notifications for the same payment"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get pods -n payments` to check transaction-processor pod status",
+      "step 2: `kubectl logs <transaction-processor-pod> -n payments` to check for error messages or warnings",
+      "step 3: `redis-cli` to inspect Redis keys related to payment processing for duplicates"
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl exec -it <transaction-processor-pod> -n payments -- /bin/bash -c 'java -jar /app.jar --duplicate-payment-detection.enabled=false'` to disable duplicate detection temporarily",
+      "step 2: Monitor the system to identify the root cause",
+      "step 3: `kubectl exec -it <transaction-processor-pod> -n payments -- /bin/bash -c 'java -jar /app.jar --duplicate-payment-detection.enabled=true'` to re-enable and verify"
+    ],
+    "escalation": "If the issue persists for more than 30 minutes, page the on-call SRE team and senior management",
+    "rollback": "If the fix introduces new issues, revert the change by enabling duplicate detection and perform a thorough check of the system",
+    "prevention": "Implement a more robust duplicate payment detection mechanism, possibly involving a distributed ID generator",
+    "related_alerts": [
+      "Prometheus alert for high transaction-processor latency",
+      "Grafana dashboard for payment processing metrics"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-64",
+    "title": "Order service CrashLoopBackOff after deployment",
+    "category": "application",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "CrashLoopBackOff events in Kubernetes pod logs as seen in Prometheus or PagerDuty",
+      "Error messages in logs such as 'java.lang.OutOfMemoryError: Java heap space' or 'Failed to start application due to missing configuration'",
+      "Users reporting issues with placing orders or viewing order details"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get pods -n <namespace>` to check for CrashLoopBackOff events",
+      "step 2: `kubectl describe pod <pod-name> -n <namespace>` to review pod events and logs",
+      "step 3: Decision point - If the issue is related to memory or configuration, escalate to development team. If it's a deployment issue, proceed with resolution steps"
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl delete pod <pod-name> -n <namespace>` to force a new deployment",
+      "step 2: Check if the issue persists, if yes, review the deployment manifest for any misconfigurations",
+      "step 3: `kubectl get pods -n <namespace>` to verify the pod is running and healthy"
+    ],
+    "escalation": "When to escalate: If the issue persists after resolution steps, escalate to the development team or SRE lead. Specific threshold - 30 minutes without resolution",
+    "rollback": "Exact rollback procedure: If the fix makes the situation worse, use `kubectl rollout undo deployment/<deployment-name> -n <namespace>` to revert to the previous deployment version",
+    "prevention": "Specific technical improvement to prevent recurrence: Implement automated testing for deployment manifests and improve monitoring for resource usage",
+    "related_alerts": [
+      "PromQL alert name: order-service-memory-oom",
+      "alert name: order-service-deployment-failure"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-65",
+    "title": "Notification service Kafka consumer lag backlog",
+    "category": "application",
+    "team": "payments-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "Notification service Kafka consumer lag exceeds 10000 messages",
+      "Prometheus alert 'kafka_consumer_lag' with value over 10000",
+      "User reports delayed notifications for merchants and customers"
+    ],
+    "diagnosis_steps": [
+      "step 1: Run `kubectl get pods -l app=notification-service` to identify the affected pod",
+      "step 2: Use `kubectl logs <pod_name> -c consumer` to check the logs for any errors or warnings",
+      "step 3: Check Kafka cluster health with `kubectl exec <kafka_pod> -- /opt/kafka/bin/kafka-topics.sh --describe --topic notification-topic` and look for any issues"
+    ],
+    "resolution_steps": [
+      "step 1: Restart the notification service pod with `kubectl delete pod <pod_name> -l app=notification-service`",
+      "step 2: Monitor the consumer logs for any new errors and ensure the pod is processing messages normally",
+      "step 3: Verify the consumer lag with `kubectl exec <kafka_pod> -- /opt/kafka/bin/kafka-consumer-groups.sh --describe --group notification-group` and ensure it is below 10000"
+    ],
+    "escalation": "If the issue persists after 30 minutes, escalate to the SRE lead and SRE on-call. Page the SRE on-call at +1-555-1234",
+    "rollback": "If the fix makes the situation worse, revert to the previous state by restoring the notification service pod from backup and re-running the diagnosis steps",
+    "prevention": "Implement a monitoring alert for Kafka consumer lag and ensure that the notification service is scaled appropriately to handle the load",
+    "related_alerts": [
+      "Prometheus alert 'kafka_consumer_lag_high'",
+      "Grafana dashboard 'Kafka Consumer Lag Monitoring'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-66",
+    "title": "Merchant API rate limiter misconfiguration",
+    "category": "application",
+    "team": "payments-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "High CPU and memory usage on the merchant-api pod as seen in Prometheus",
+      "Increased number of 429 (Too Many Requests) HTTP responses logged in CloudWatch",
+      "User reports slow response times and service unavailability"
+    ],
+    "diagnosis_steps": [
+      "step 1: kubectl top pod -n <namespace> -l app=merchant-api to check CPU and memory usage",
+      "step 2: grep '429 Too Many Requests' /var/log/nginx/access.log to identify the source of 429 responses",
+      "step 3: decision point - if the rate limiter threshold is significantly higher than expected, proceed to resolution"
+    ],
+    "resolution_steps": [
+      "step 1: kubectl edit deployment/merchant-api -n <namespace> to adjust the rate limiter settings",
+      "step 2: scale down the merchant-api deployment to 0 replicas, apply the updated configuration, and scale back up",
+      "step 3: kubectl get pods -n <namespace> to verify the deployment is healthy and serving traffic normally"
+    ],
+    "escalation": "if the issue persists or impacts more than 10% of transactions, page the on-call SRE and the team lead",
+    "rollback": "if the fix makes the situation worse, revert to the previous configuration using kubectl edit deployment/merchant-api -n <namespace>",
+    "prevention": "implement automated testing for rate limiter configurations and integrate with CI/CD pipeline",
+    "related_alerts": [
+      "Prometheus alert for high CPU usage on merchant-api",
+      "Grafana dashboard for HTTP response codes"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-67",
+    "title": "Payment service graceful shutdown during deployment",
+    "category": "application",
+    "team": "payments-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "High CPU usage on payment-service pods as seen in Prometheus",
+      "Error logs in Kubernetes cluster showing 'Shutting down' messages",
+      "Decreased transaction processing rate affecting user experience"
+    ],
+    "diagnosis_steps": [
+      "step 1: kubectl get pods -l app=payment-service -o wide; psql -h <db-host> -U <db-user> -d <db-name> -c \"SELECT * FROM performance_metrics;\"",
+      "step 2: Check for 'Shutting down' messages in the pod logs using kubectl logs <pod-name> -f",
+      "step 3: Decision point - If the shutdown messages are expected and no other critical issues, proceed with the deployment; otherwise, halt and investigate further"
+    ],
+    "resolution_steps": [
+      "step 1: kubectl scale deployment payment-service --replicas=0; kubectl scale deployment payment-service --replicas=<desired-replicas>",
+      "step 2: Monitor the deployment through Prometheus and Grafana to ensure smooth transition",
+      "step 3: kubectl get pods -l app=payment-service -o wide; kubectl describe pod <pod-name> to verify the pods are in healthy state"
+    ],
+    "escalation": "If the shutdown process takes longer than 15 minutes or if any critical alerts are triggered, page the on-call SREs and PMs",
+    "rollback": "kubectl scale deployment payment-service --replicas=<previous-replica-count> if the deployment causes a significant drop in service availability",
+    "prevention": "Implement automated health checks and failover mechanisms for payment-service during deployments",
+    "related_alerts": [
+      "Prometheus alert: payment-service_high_cpu_usage",
+      "Grafana dashboard: payment-service_deployment_monitoring"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-68",
+    "title": "Fraud detection ML model stale data rollback",
+    "category": "application",
+    "team": "payments-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "High fraud detection false positive rate as seen in Prometheus",
+      "Increased transaction delays and retries as seen in Kafka logs",
+      "User complaints about delayed or failed transactions"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get pods -n payments` to check if ML model pod is running",
+      "step 2: `kubectl logs <ml-model-pod-name> -n payments` to check for any errors or warnings",
+      "step 3: Decision point - If the model is not running or showing errors, proceed to rollback"
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl rollout undo deployment/<fraud-detection-service-deployment-name> -n payments` to rollback to the previous version",
+      "step 2: Monitor the rollout with `kubectl rollout status deployment/<fraud-detection-service-deployment-name> -n payments`",
+      "step 3: `kubectl get pods -n payments` to verify the rollback was successful"
+    ],
+    "escalation": "If the issue persists after rollback, escalate to the senior SRE team at FinTechFlow. Specific threshold: If the false positive rate does not decrease within 15 minutes of rollback, page the on-call SRE.",
+    "rollback": "If the rollback makes the situation worse, revert to the previous state by running `kubectl rollout undo deployment/<fraud-detection-service-deployment-name> -n payments` again and monitor the service for further issues.",
+    "prevention": "Implement a canary release strategy for ML model deployments to detect and mitigate issues before they affect the entire system.",
+    "related_alerts": [
+      "HighFraudDetectionFalsePositiveRateAlert",
+      "TransactionDelayAndRetryCountAlert"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-69",
+    "title": "Transaction processor idempotency violation",
+    "category": "application",
+    "team": "payments-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "High error rate or duplicate transaction processing as seen in Prometheus metrics",
+      "Error logs with 'idempotency violation' or 'duplicate transaction' pattern in Kafka consumer logs",
+      "User reports of failed or duplicated transactions in merchant interface"
+    ],
+    "diagnosis_steps": [
+      "step 1: Run `kubectl get pods -n payments` to identify affected transaction-processor pods",
+      "step 2: Check `kubectl logs <transaction-processor-pod> -n payments` for error messages",
+      "step 3: Analyze `kubectl top pod <transaction-processor-pod> -n payments` to check for resource utilization spikes"
+    ],
+    "resolution_steps": [
+      "step 1: Restart affected transaction-processor pods with `kubectl delete pod <transaction-processor-pod> -n payments`",
+      "step 2: Review and update transaction processing logic to ensure idempotency",
+      "step 3: Run `kubectl get pods -n payments` to ensure new pods are healthy and processing transactions correctly"
+    ],
+    "escalation": "If the issue persists after 30 minutes, escalate to the on-call SRE team and product management",
+    "rollback": "Rollback to previous version of transaction-processor code if the fix introduces new issues",
+    "prevention": "Implement idempotency checks at the database level and transaction service level",
+    "related_alerts": [
+      "Prometheus alert: high_error_rate{service=\"transaction-processor\"",
+      "Grafana dashboard: transaction_processing_errors"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-70",
+    "title": "Payment service thread pool exhaustion",
+    "category": "application",
+    "team": "payments-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "High CPU usage and increased latency observed in Prometheus metrics for payment-service",
+      "Error logs showing 'java.util.concurrent.RejectedExecutionException' in the logs",
+      "User reports delayed or failed payment processing transactions"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl top pod -n <namespace>` to check CPU and memory usage of payment-service pods",
+      "step 2: `kubectl logs <pod_name> -n <namespace>` to find logs containing 'java.util.concurrent.RejectedExecutionException'",
+      "step 3: Evaluate if the number of active threads exceeds the defined maximum thread pool size"
+    ],
+    "resolution_steps": [
+      "step 1: Increase the thread pool size in the application configuration",
+      "step 2: Monitor the system for any new issues",
+      "step 3: `kubectl get pods -n <namespace>` to confirm that the payment-service pods are healthy"
+    ],
+    "escalation": "If the issue persists for more than 30 minutes, page the on-call SRE and SRE lead",
+    "rollback": "If the fix makes the situation worse, revert the change by reducing the thread pool size and monitor for 15 minutes",
+    "prevention": "Implement a monitoring alert for thread pool exhaustion and ensure the thread pool size is dynamically adjusted based on load",
+    "related_alerts": [
+      "Prometheus alert: payment-service-thread-pool-exhaustion",
+      "Grafana dashboard: Thread Pool Usage"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-71",
+    "title": "Order service database migration failure recovery",
+    "category": "application",
+    "team": "payments-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "Alert fired in PagerDuty"
+    ],
+    "diagnosis_steps": [
+      "Check Grafana dashboard"
+    ],
+    "resolution_steps": [
+      "Follow standard procedure"
+    ],
+    "escalation": "Escalate to payments-sre lead after 15 mins",
+    "prevention": "Add monitoring threshold"
+  },
+  {
+    "runbook_id": "FTF-RB-72",
+    "title": "Notification service dead letter queue overflow",
+    "category": "application",
+    "team": "payments-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: notification_service_dlq_messages{service='notification-service'} > 10000",
+      "specific symptom 2 with metric name or log pattern: 'DLQ overflow detected' in logs",
+      "specific symptom 3 user facing impact: Delayed or failed notifications to merchants"
+    ],
+    "diagnosis_steps": [
+      "step 1: exact kubectl, psql, redis-cli or AWS CLI command to run: kubectl top pod notification-service -n payments; kubectl logs -f <notification-service-pod> -n payments",
+      "step 2: what output to look for and what it means: Check the number of messages in the dead letter queue using 'redis-cli', look for any error messages in the logs",
+      "step 3: decision point - what determines next action: If the queue has overflowed and there are critical errors, escalate immediately"
+    ],
+    "resolution_steps": [
+      "step 1: exact remediation command with explanation: kubectl exec -it <notification-service-pod> -n payments -- /bin/bash -c 'redis-cli DEL <dlq-key>'; kubectl scale deployment notification-service --replicas=0 -n payments; kubectl scale deployment notification-service --replicas=3 -n payments",
+      "step 2: follow-up action: Monitor the service for stability and ensure there are no further overflow issues",
+      "step 3: verification command and expected healthy output: kubectl top pod notification-service -n payments; Check the dead letter queue using 'redis-cli' to ensure it is empty"
+    ],
+    "escalation": "when to escalate: specific threshold and who to page at FinTechFlow: If the dead letter queue exceeds 20,000 messages, page the on-call SRE and PM",
+    "rollback": "exact rollback procedure if fix makes situation worse: kubectl scale deployment notification-service --replicas=1 -n payments; Monitor the service closely and revert to the previous state if necessary",
+    "prevention": "specific technical improvement to prevent recurrence: Implement a queue monitoring script to alert the team before the queue reaches its threshold; Add a queue size limit and automatic scaling based on the queue size",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: notification_service_dlq_messages",
+      "alert name 2: notification_service_error_rate"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-73",
+    "title": "Payment service health check false eviction",
+    "category": "application",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: `payment-service-eviction` alert firing",
+      "specific symptom 2 with metric name or log pattern: `payment-service pod eviction due to health check failure` in Kubernetes events",
+      "specific symptom 3 user facing impact: Delayed or failed transactions, increased latency in payment processing"
+    ],
+    "diagnosis_steps": [
+      "step 1: exact kubectl, psql, redis-cli or AWS CLI command to run: `kubectl get pods -n <namespace> -o wide`, `kubectl describe pod <pod-name> -n <namespace>`, `kubectl logs <pod-name> -n <namespace>`, `kubectl get events -n <namespace> --sort-by=.metadata.creationTimestamp`",
+      "step 2: what output to look for and what it means: Check for `Evicted` status, `ReadinessProbe` or `LivenessProbe` failure messages, and review recent logs for any related errors",
+      "step 3: decision point - what determines next action: If the issue is related to health check failures, proceed to resolution steps. If it's a different issue, escalate to the appropriate team"
+    ],
+    "resolution_steps": [
+      "step 1: exact remediation command with explanation: `kubectl delete pod <pod-name> -n <namespace>` to force a new pod creation, which may resolve the health check issue",
+      "step 2: follow-up action: Monitor the new pod for health check failures and ensure it stabilizes",
+      "step 3: verification command and expected healthy output: `kubectl get pods -n <namespace>`, `kubectl describe pod <pod-name> -n <namespace>`, expect `Ready` status and no `Evicted` or `ReadinessProbe`/`LivenessProbe` failure messages"
+    ],
+    "escalation": "when to escalate: If the issue persists after 15 minutes, escalate to the on-call engineer or SRE lead, specific threshold and who to page at FinTechFlow: `on-call@fin-tech-flow.com`",
+    "rollback": "exact rollback procedure if fix makes situation worse: Revert the changes that caused the issue and revert to the previous stable state, then monitor for further issues",
+    "prevention": "specific technical improvement to prevent recurrence: Implement custom health checks that are more resilient to transient issues, and ensure that the health check interval and timeout settings are appropriate for the service",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: `payment-service-eviction`",
+      "alert name 2: `payment-service-health-check-failure`"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-74",
+    "title": "Merchant API pagination causing incomplete exports",
+    "category": "application",
+    "team": "payments-sre",
+    "severity_when_triggered": "P3",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: High CPU usage on the Merchant API service",
+      "specific symptom 2 with metric name or log pattern: Increased log entries with 'Pagination error' in the order-service logs",
+      "specific symptom 3 user facing impact: Incomplete export data for merchants"
+    ],
+    "diagnosis_steps": [
+      "step 1: kubectl get pods -n payments -l app=order-service -o jsonpath='{.items[0].metadata.name}'",
+      "step 2: kubectl logs <order-service-pod> -n payments | grep 'Pagination error'",
+      "step 3: Decision point - If pagination errors are frequent, proceed to resolution steps"
+    ],
+    "resolution_steps": [
+      "step 1: kubectl edit deployment/order-service -n payments -o json | jq '.spec.template.spec.containers[0].env |= map(select(.name != \"PAGINATION_LIMIT\"))' | kubectl apply -f -",
+      "step 2: Follow-up action - Monitor logs for a period to ensure the issue is resolved",
+      "step 3: kubectl get pods -n payments -l app=order-service -o jsonpath='{.items[0].metadata.name}' && kubectl logs <order-service-pod> -n payments | grep 'Pagination error'"
+    ],
+    "escalation": "When to escalate: If the issue persists for more than 1 hour, page the on-call SRE team at FinTechFlow",
+    "rollback": "exact rollback procedure if fix makes situation worse: kubectl apply -f <original-deployment-file>",
+    "prevention": "specific technical improvement to prevent recurrence: Implement a circuit breaker pattern in the Merchant API to handle pagination errors more gracefully",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: order-service-pagination-errors",
+      "alert name 2: order-service-high-cpu-usage"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-75",
+    "title": "Feature flag rollout causing scoring regression",
+    "category": "application",
+    "team": "payments-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: Decrease in transaction processing rate",
+      "specific symptom 2 with metric name or log pattern: Increase in latency metrics (e.g., `transaction_processor.latency`)",
+      "specific symptom 3 user facing impact: Delayed or failed transactions for a subset of merchants"
+    ],
+    "diagnosis_steps": [
+      "step 1: exact kubectl, psql, redis-cli or AWS CLI command to run: `kubectl get pods -n <namespace> && psql -h <db-host> -U <user> -c \"SELECT * FROM transactions WHERE timestamp > now() - interval '1 hour'\"`",
+      "step 2: what output to look for and what it means: Check for any anomalies in transaction processing or latency, and review logs for any feature flag-related errors",
+      "step 3: decision point - what determines next action: Determine if the issue is isolated to a specific service or if it affects multiple services"
+    ],
+    "resolution_steps": [
+      "step 1: exact remediation command with explanation: `kubectl rollout undo deployment/<service-deployment-name> -n <namespace>` to revert the deployment to the previous version",
+      "step 2: follow-up action: Monitor the service for a period to ensure the issue is resolved",
+      "step 3: verification command and expected healthy output: `kubectl get pods -n <namespace> && psql -h <db-host> -U <user> -c \"SELECT * FROM transactions WHERE timestamp > now() - interval '1 hour'\"` should show normal transaction processing and latency metrics"
+    ],
+    "escalation": "when to escalate: Specific threshold and who to page at FinTechFlow: If the issue persists for more than 30 minutes, page the on-call SRE and SRE lead",
+    "rollback": "exact rollback procedure if fix makes situation worse: If the rollback does not resolve the issue, revert to the most recent stable version and initiate a post-mortem to identify the root cause",
+    "prevention": "specific technical improvement to prevent recurrence: Implement automated testing for feature flags, and ensure thorough testing before rolling out new feature flags",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: `transaction_processing_rate{service=\"transaction-processor\"} < 1000`",
+      "alert name 2: `high_transaction_latency{service=\"transaction-processor\"} > 500ms`"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-76",
+    "title": "HashiCorp Vault sealed emergency procedure",
+    "category": "security",
+    "team": "security-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "Prometheus alert: 'vault_sealed' with value 1",
+      "Grafana dashboard: 'Vault Health' showing 'Sealed' state",
+      "User facing impact: 500 errors on payment-service and order-service APIs"
+    ],
+    "diagnosis_steps": [
+      "step 1: kubectl exec -it vault-0 -n vault -- vault status",
+      "step 2: Look for 'Sealed' status in the output, indicating the Vault is sealed",
+      "step 3: Check Vault logs for any errors or warnings using 'kubectl logs vault-0 -n vault'"
+    ],
+    "resolution_steps": [
+      "step 1: kubectl exec -it vault-0 -n vault -- vault operator unseal --key <unseal_key>",
+      "step 2: Follow up with 'vault status' to ensure Vault is unsealed and healthy",
+      "step 3: Verify Vault health by accessing the Vault UI or using 'kubectl exec -it vault-0 -n vault -- vault status'"
+    ],
+    "escalation": "When to escalate: If Vault remains sealed after 30 minutes, page the on-call security-sre team and FinTechFlow incident management team",
+    "rollback": "If the unsealing process makes the situation worse, rollback by re-sealing the Vault and reverting to the previous unseal key",
+    "prevention": "Implement a regular vault unseal key rotation and backup strategy to prevent accidental sealing",
+    "related_alerts": [
+      "PromQL alert: 'vault_sealed'",
+      "Grafana dashboard: 'Vault Health'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-77",
+    "title": "AWS WAF false positive blocking payments",
+    "category": "security",
+    "team": "security-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "Specific symptom 1: A sudden increase in the number of 403 Forbidden errors in Prometheus metrics.",
+      "Specific symptom 2: Log entries in CloudWatch with 'AWS WAF: denied request' in the message.",
+      "Specific symptom 3: Users report being unable to make payments through the merchant-api service."
+    ],
+    "diagnosis_steps": [
+      "Step 1: Run `kubectl get services -n <namespace>` to check if any services are experiencing high traffic or issues.",
+      "Step 2: Check CloudWatch logs for AWS WAF rules using `aws logs filter-log-events --log-group-name /aws/waf/CloudFront`.",
+      "Step 3: Determine if the false positive is due to an overly restrictive WAF rule or misconfigured parameters."
+    ],
+    "resolution_steps": [
+      "Step 1: Modify the WAF rule using `aws wafv2 update-web-acl --name <web-acl-name> --scope CLOUDFRONT --change-token <change-token> --updates '[{\"Action\":\"INSERT\",\"Position\":\"1\",\"ResourceArn\":\"<resource-arn>\",\"Rule\":{\"Priority\":1,\"Name\":\"<rule-name>\",\"Statement\":{\"SqlInjectionMatchStatement\":{\"FieldToMatch\":{\"SingleHeader\":{\"Name\":\"<header-name>\"}},\"TextTransformation\":{\"Priority\":1}}}}}]'`.",
+      "Step 2: Test the changes by sending a sample request and checking the CloudWatch logs.",
+      "Step 3: Verify the resolution by monitoring Prometheus metrics and CloudWatch logs for any further issues."
+    ],
+    "escalation": "When to escalate: If the issue persists for more than 30 minutes or affects over 10% of transactions, page the on-call team immediately.",
+    "rollback": "Exact rollback procedure: Revert the WAF rule configuration to the previous state using `aws wafv2 update-web-acl` with the original change token.",
+    "prevention": "Specific technical improvement to prevent recurrence: Regularly review and test WAF rules to ensure they are correctly configured and not blocking legitimate traffic.",
+    "related_alerts": [
+      "PromQL alert name: 'payment_processing_errors{status_code=\"403\"}'",
+      "Grafana dashboard name: 'Payment Service Health'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-78",
+    "title": "SSL certificate expired emergency renewal",
+    "category": "security",
+    "team": "security-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: SSL certificate expiration alert in Prometheus or PagerDuty",
+      "specific symptom 2 with metric name or log pattern: 'certificate_expired' metric in Prometheus or 'SSL certificate expired' log pattern in Kubernetes EKS",
+      "specific symptom 3 user facing impact: HTTPS connection errors or service downtime for users"
+    ],
+    "diagnosis_steps": [
+      "step 1: exact kubectl, psql, redis-cli or AWS CLI command to run: `kubectl get secrets -n <namespace> | grep <service-name> && kubectl describe secret <service-name> -n <namespace> && kubectl get pods -n <namespace> -o wide`",
+      "step 2: what output to look for and what it means: Check the secret for the SSL certificate expiration date and the pod status for any issues",
+      "step 3: decision point - what determines next action: If the certificate has expired and there are no running pods, proceed to renewal; if pods are still running, investigate further"
+    ],
+    "resolution_steps": [
+      "step 1: exact remediation command with explanation: `openssl x509 -in <path-to-certificate> -noout -text | grep Validity && openssl x509 -in <path-to-certificate> -noout -text | grep 'Not After' && kubectl create secret tls <service-name> --cert=<path-to-new-certificate> --key=<path-to-new-key> -n <namespace>`",
+      "step 2: follow-up action: Update the service configuration to use the new secret and ensure all pods are restarted",
+      "step 3: verification command and expected healthy output: `kubectl get pods -n <namespace> -o wide && kubectl get secrets -n <namespace> | grep <service-name>` - Expected output should show the new certificate and all pods running"
+    ],
+    "escalation": "when to escalate: If the certificate renewal process fails or causes service downtime, page the on-call team in PagerDuty",
+    "rollback": "exact rollback procedure if fix makes situation worse: `kubectl delete secret <service-name> -n <namespace> && kubectl create secret tls <service-name> --cert=<path-to-old-certificate> --key=<path-to-old-key> -n <namespace>`",
+    "prevention": "specific technical improvement to prevent recurrence: Implement automated certificate management with tools like Cert Manager in Kubernetes and set up regular certificate expiration notifications",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: 'certificate_expiration_alert'",
+      "alert name 2: 'ssl_certificate_expired'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-79",
+    "title": "AWS IAM AccessDenied blocking service operations",
+    "category": "security",
+    "team": "security-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: 'AWS API call rate limit exceeded' alert",
+      "specific symptom 2 with metric name or log pattern: 'AccessDenied' in AWS CloudTrail logs",
+      "specific symptom 3 user facing impact: Payment processing delays or failures"
+    ],
+    "diagnosis_steps": [
+      "step 1: `aws iam get-user-policy` or `aws sts get-caller-identity` to check IAM user or role permissions",
+      "step 2: What output to look for and what it means: Verify if the IAM user or role has the necessary permissions to perform the required actions",
+      "step 3: Decision point - what determines next action: If the permissions are insufficient, proceed to resolution steps; if there's a misconfiguration, correct it before proceeding"
+    ],
+    "resolution_steps": [
+      "step 1: `aws iam attach-user-policy` or `aws iam attach-role-policy` to add necessary permissions",
+      "step 2: Follow-up action: Review and update IAM policies to ensure they meet the required permissions",
+      "step 3: Verification command and expected healthy output: `aws sts get-caller-identity` should return expected IAM user or role details"
+    ],
+    "escalation": "when to escalate: If the issue persists after 30 minutes of troubleshooting, page the on-call SRE or the security team leader at FinTechFlow",
+    "rollback": "exact rollback procedure if fix makes situation worse: Revert the policy changes using `aws iam detach-user-policy` or `aws iam detach-role-policy` and review the environment for any unintended changes",
+    "prevention": "specific technical improvement to prevent recurrence: Implement automated IAM policy validation tools and regular security audits",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: 'IAM AccessDenied API Calls'",
+      "alert name 2: 'AWS API Rate Limit Exceeded'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-80",
+    "title": "API key rotation failure recovery",
+    "category": "security",
+    "team": "security-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: Alert 'APIKeyRotationFailed' triggered with high severity",
+      "specific symptom 2 with metric name or log pattern: 'api_key_rotation_status' shows 'FAILED' in Prometheus",
+      "specific symptom 3 user facing impact: Integration services may fail to authenticate with third-party APIs, leading to service disruptions"
+    ],
+    "diagnosis_steps": [
+      "step 1: exact kubectl, psql, redis-cli or AWS CLI command to run: `kubectl get pods -n <namespace> -o wide` to check running pods and `kubectl logs <pod-name> -n <namespace>` to check logs",
+      "step 2: what output to look for and what it means: Look for 'API key rotation' related logs indicating failure, e.g., 'Failed to update API key in Redis'",
+      "step 3: decision point - what determines next action: Determine if the issue is isolated to a single service or if multiple services are affected"
+    ],
+    "resolution_steps": [
+      "step 1: exact remediation command with explanation: `kubectl exec -n <namespace> <pod-name> -- redis-cli -h <redis-host> -p 6379 KEYS 'api_key:*'` to check the current API keys in Redis",
+      "step 2: follow-up action: If the API key is missing or incorrect, use `kubectl exec -n <namespace> <pod-name> -- redis-cli -h <redis-host> -p 6379 SET 'api_key:<service-name>' '<new-api-key>'` to update the key",
+      "step 3: verification command and expected healthy output: `kubectl exec -n <namespace> <pod-name> -- curl -X GET <service-url> -H 'Authorization: Bearer <new-api-key>'` to verify service connectivity with the new API key"
+    ],
+    "escalation": "when to escalate: If the issue persists after 30 minutes of attempted resolution, page the on-call SRE team and the security lead at FinTechFlow",
+    "rollback": "exact rollback procedure if fix makes situation worse: Revert the API key in Redis to the previous value using `kubectl exec -n <namespace> <pod-name> -- redis-cli -h <redis-host> -p 6379 DEL 'api_key:<service-name>'` and update the service with the old API key",
+    "prevention": "specific technical improvement to prevent recurrence: Implement automated API key rotation checks and alerts in monitoring tools like Prometheus and Grafana",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: 'APIKeyRotationFailureAlert'",
+      "alert name 2: 'ServiceAuthenticationFailure'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-81",
+    "title": "Vault token TTL causing secret refresh storm",
+    "category": "security",
+    "team": "security-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "High alert count in Prometheus for Vault token refreshes (e.g., 'vault_token_refreshed{token_type=\"client\"}' metric shows a sudden spike)",
+      "Increased CPU and memory usage on Vault pods as observed in Kubernetes monitoring tools (e.g., Grafana dashboard)",
+      "User reports of intermittent API slowdowns or failures in payment-service, order-service, or other services that rely on Vault secrets"
+    ],
+    "diagnosis_steps": [
+      "kubectl -n <namespace> top pod -l app=vault -c=vault | sort -nr | head -n 10",
+      "Check Vault logs for token refresh events: kubectl -n <namespace> logs <vault-pod> | grep 'token renewal'",
+      "Verify if the Vault token TTL is set too low: kubectl -n <namespace> exec <vault-pod> -- vault operator tune -max-leases-per-lease-id 100000 -max-lease-ttl 3600s"
+    ],
+    "resolution_steps": [
+      "Increase the Vault token TTL: kubectl -n <namespace> exec <vault-pod> -- vault operator tune -max-lease-ttl 3600s",
+      "Monitor the system for any further issues and ensure stability",
+      "Verify that the number of token refreshes has decreased: kubectl -n <namespace> top pod -l app=vault -c=vault | sort -nr | head -n 10"
+    ],
+    "escalation": "If the issue persists or worsens, escalate to the Security and Infrastructure teams. Page the on-call engineer at FinTechFlow if the number of token refreshes exceeds 10000 in an hour.",
+    "rollback": "If the fix makes the situation worse, revert the Vault token TTL to the previous value: kubectl -n <namespace> exec <vault-pod> -- vault operator tune -max-lease-ttl 300s",
+    "prevention": "Implement a regular review process for Vault token TTL settings to ensure they are appropriate for the environment. Consider using Vault's dynamic secrets or token policies to further manage token lifetimes.",
+    "related_alerts": [
+      "prometheus-alert-rules/vault-token-refresh-rate",
+      "grafana-dashboards/vault-token-refreshes"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-82",
+    "title": "mTLS certificate rotation procedure",
+    "category": "security",
+    "team": "security-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "TLS handshake failures in Prometheus or Grafana metrics",
+      "Increased error rate in logs related to mTLS certificate validation",
+      "User reports delayed or failed transactions"
+    ],
+    "diagnosis_steps": [
+      "step 1: Run `kubectl get pods -n <namespace>` to list all pods and identify any with TLS errors",
+      "step 2: Check logs using `kubectl logs <pod-name> -n <namespace>` for error messages related to mTLS certificates",
+      "step 3: Verify the current certificate status using `kubectl exec -it <pod-name> -n <namespace> -- openssl s_client -connect <service-name>.<namespace>.svc:443 -servername <service-name>.<namespace>.svc`"
+    ],
+    "resolution_steps": [
+      "step 1: Use `kubectl exec -it <pod-name> -n <namespace> -- openssl s_client -connect <service-name>.<namespace>.svc:443 -servername <service-name>.<namespace>.svc -cert <new-certificate-file> -key <new-key-file>` to test the new certificate",
+      "step 2: Apply the new certificates to the Kubernetes secrets using `kubectl edit secret <secret-name> -n <namespace>` and upload the new certificate and key files",
+      "step 3: Verify the new certificates are in place and functioning correctly using `kubectl exec -it <pod-name> -n <namespace> -- openssl s_client -connect <service-name>.<namespace>.svc:443 -servername <service-name>.<namespace>.svc`"
+    ],
+    "escalation": "Escalate to the on-call team if the issue persists after 30 minutes of initial diagnosis and resolution steps",
+    "rollback": "If the fix makes the situation worse, revert the certificate changes using `kubectl edit secret <secret-name> -n <namespace>` and upload the previous certificate and key files",
+    "prevention": "Implement automated certificate rotation and renewal processes using tools like Let's Encrypt with Cert Manager in Kubernetes",
+    "related_alerts": [
+      "Prometheus alert: TLS handshake failures",
+      "Grafana dashboard: mTLS certificate validation errors"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-83",
+    "title": "AWS KMS key policy blocking encryption",
+    "category": "security",
+    "team": "security-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "Alert fired in PagerDuty"
+    ],
+    "diagnosis_steps": [
+      "Check Grafana dashboard"
+    ],
+    "resolution_steps": [
+      "Follow standard procedure"
+    ],
+    "escalation": "Escalate to security-sre lead after 15 mins",
+    "prevention": "Add monitoring threshold"
+  },
+  {
+    "runbook_id": "FTF-RB-84",
+    "title": "Cloudflare firewall blocking legitimate traffic",
+    "category": "security",
+    "team": "security-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "High failure rate in payment-service and order-service as seen in Prometheus metrics with increasing error rates for requests to Cloudflare IPs",
+      "Increased latency in transaction-processor and notification-service with log patterns indicating timeouts or retries",
+      "User reports of failed payments or delayed notifications, impacting customer satisfaction and operational metrics in PagerDuty"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get pods -n <namespace>` to check for running pods and their statuses",
+      "step 2: `kubectl describe pod <pod-name> -n <namespace>` to check for any specific error messages or warnings",
+      "step 3: Check Cloudflare dashboard for any recent firewall rules or rate limit configurations that might be affecting traffic"
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl edit service <service-name> -n <namespace>` to temporarily bypass Cloudflare by adding a custom header or modifying the service configuration",
+      "step 2: Review and adjust Cloudflare firewall rules to ensure they are not blocking legitimate traffic",
+      "step 3: `kubectl get services -n <namespace>` to verify the service configuration and ensure it is functioning as expected"
+    ],
+    "escalation": "If the issue persists after 30 minutes of troubleshooting, escalate to the security team lead and SRE manager. Page the on-call SRE if the issue impacts P1 services.",
+    "rollback": "If the fix makes the situation worse, revert to the previous service configuration using `kubectl edit service <service-name> -n <namespace>` and restore the original firewall rules in Cloudflare.",
+    "prevention": "Implement more granular rate limiting and anomaly detection in Cloudflare to prevent future misconfigurations from blocking legitimate traffic. Regularly review and test firewall rules to ensure they are configured correctly.",
+    "related_alerts": [
+      "Prometheus alert: high_error_rate_for_cloudflare_requests",
+      "Grafana dashboard: network_latency_overview"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-85",
+    "title": "AWS Secrets Manager rotation failure",
+    "category": "security",
+    "team": "security-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "Specific symptom 1 as seen in Prometheus or PagerDuty: 'aws_secrets_manager_rotation_status' alert firing with status 'failed'",
+      "Specific symptom 2 with metric name or log pattern: 'AWS Secrets Manager Rotation Failed' message in CloudWatch Logs",
+      "Specific symptom 3 user facing impact: Potential service disruptions due to authentication issues in services relying on rotated secrets"
+    ],
+    "diagnosis_steps": [
+      "Step 1: `aws secretsmanager list-secrets --query 'SecretList[?RotationEnabled==`true`]' --output text` to check enabled secrets",
+      "Step 2: `aws secretsmanager get-secret-value --secret-id <secret-id> --query 'SecretString' | jq .` to inspect secret details and rotation status",
+      "Step 3: Decision point - If the rotation is stuck or failed, proceed to resolution steps"
+    ],
+    "resolution_steps": [
+      "Step 1: `aws secretsmanager disable-secret-version-rotation --secret-id <secret-id> --version-id <version-id>` to disable rotation temporarily",
+      "Step 2: Investigate the cause of failure, possibly in CloudWatch Logs or AWS Secrets Manager console",
+      "Step 3: `aws secretsmanager enable-secret-version-rotation --secret-id <secret-id>` after resolving the issue"
+    ],
+    "escalation": "When to escalate: If the issue persists for more than 30 minutes, page the on-call Security SRE and SRE Lead",
+    "rollback": "Exact rollback procedure if fix makes situation worse: `aws secretsmanager enable-secret-version-rotation --secret-id <secret-id>` if rotation was incorrectly disabled",
+    "prevention": "Specific technical improvement to prevent recurrence: Implement automated monitoring and alerting for secret rotation status and enable multi-factor authentication for AWS Secrets Manager access",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: 'aws_secrets_manager_rotation_status'",
+      "alert name 2: 'aws_secrets_manager_rotation_failure'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-86",
+    "title": "EKS node NotReady recovery procedure",
+    "category": "kubernetes",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "Node status shows 'NotReady' in Kubernetes dashboard or via `kubectl get nodes` command",
+      "High CPU or memory usage metrics in Prometheus or Grafana",
+      "Increased error rate in service logs, e.g., `transaction-processor` service error logs",
+      "User-facing issues such as delayed payments or failed transactions"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get nodes` to check node status and `kubectl describe node <node-name>` for more details",
+      "step 2: Check AWS EKS dashboard or AWS CLI output for node health and any pending maintenance",
+      "step 3: Review Prometheus or Grafana metrics for high CPU or memory usage, and check for any known issues"
+    ],
+    "resolution_steps": [
+      "step 1: If node is stuck in NotReady state due to pending maintenance, use `eksctl` to drain and replace the node",
+      "step 2: If node is stuck due to high resource usage, scale down the services running on the node using `kubectl scale`",
+      "step 3: Verify node status with `kubectl get nodes` and ensure it is in 'Ready' state"
+    ],
+    "escalation": "If the node issue persists after 15 minutes of troubleshooting, escalate to the on-call SRE and Platform Engineering team lead",
+    "rollback": "If the fix makes the situation worse, immediately revert the changes using `eksctl` and report the rollback to the on-call team",
+    "prevention": "Implement automated node health checks and alerts, and configure auto-scaling policies for EKS clusters",
+    "related_alerts": [
+      "PromQL alert for high CPU or memory usage",
+      "Grafana dashboard for Kubernetes node health"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-87",
+    "title": "Pod CrashLoopBackOff investigation and fix",
+    "category": "kubernetes",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: 'kube_pod_container_status_restarts_total' metric shows high restarts for the affected pod",
+      "specific symptom 2 with metric name or log pattern: 'CrashLoopBackOff' events logged in the Kubernetes event stream",
+      "specific symptom 3 user facing impact: Users may experience delays or failures in payment processing"
+    ],
+    "diagnosis_steps": [
+      "step 1: exact kubectl, psql, redis-cli or AWS CLI command to run: `kubectl describe pod <pod-name>` and `kubectl logs <pod-name> -c <container-name>`",
+      "step 2: what output to look for and what it means: Look for error messages, stack traces, or other clues in the logs that indicate the cause of the crash. Check the container logs for any error messages or exceptions.",
+      "step 3: decision point - what determines next action: If the issue is related to a configuration problem, update the deployment. If it's a code issue, redeploy the container image. If it's a resource constraint, scale the deployment or adjust resource limits."
+    ],
+    "resolution_steps": [
+      "step 1: exact remediation command with explanation: `kubectl set image deployment/<deployment-name> <container-name>=<new-image-version>` to update the container image, or `kubectl scale deployment/<deployment-name> --replicas=<new-replica-count>` to adjust the number of replicas",
+      "step 2: follow-up action: Verify that the issue has been resolved by monitoring the pod's status and logs. Ensure that the pod is no longer in CrashLoopBackOff state.",
+      "step 3: verification command and expected healthy output: `kubectl get pods -o wide` should show the pod in a Running state, and `kubectl logs <pod-name> -c <container-name>` should not show any error messages."
+    ],
+    "escalation": "when to escalate: If the issue persists after the first resolution attempt, escalate to the platform-sre lead or senior SRE. Specific threshold: If the issue affects more than 10% of the pods in a service and lasts for more than 1 hour, page the on-call team.",
+    "rollback": "exact rollback procedure if fix makes situation worse: `kubectl rollout undo deployment/<deployment-name>` to revert the deployment to the previous version. Monitor the affected pods to ensure the rollback is successful.",
+    "prevention": "specific technical improvement to prevent recurrence: Implement a comprehensive logging and monitoring strategy to capture and analyze logs in real-time. Use automated deployment pipelines with pre-deployment checks to ensure that only healthy images are deployed. Implement resource requests and limits to prevent resource starvation.",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: 'KubernetesPodCrashLoopBackOffAlert'",
+      "alert name 2: 'KubernetesPodRestartCountHigh'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-88",
+    "title": "ArgoCD sync failure recovery",
+    "category": "kubernetes",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: ArgoCD sync job status shows as 'failed' or 'error' in the ArgoCD UI or Prometheus alerts.",
+      "specific symptom 2 with metric name or log pattern: `argocd_sync_status` metric shows 'failed' or `kubectl logs argocd-sync` shows errors related to syncing repositories.",
+      "specific symptom 3 user facing impact: Users may experience service outages or degraded performance if the failed sync impacts critical services."
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get pods -n argocd` to check if ArgoCD components are running.",
+      "step 2: `kubectl logs argocd-sync -n argocd` to identify the specific error message.",
+      "step 3: Decision point - if the error is due to network issues, escalate to network team; if it's a configuration issue, escalate to DevOps team."
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl delete pods -n argocd argocd-sync` to restart the sync job.",
+      "step 2: Monitor the sync job for successful completion.",
+      "step 3: `kubectl get pods -n argocd` to ensure all ArgoCD components are running and `argocd sync status` to confirm the repository sync is successful."
+    ],
+    "escalation": "When to escalate: If the sync failure persists after restarting, escalate to the platform-sre team lead. Specific threshold: If the sync failure impacts more than 3 services. Who to page: platform-sre team lead and on-call SRE.",
+    "rollback": "Exact rollback procedure if fix makes situation worse: `kubectl rollout undo deployment/<affected-deployment> -n <namespace>` to revert to the previous deployment version.",
+    "prevention": "Specific technical improvement to prevent recurrence: Implement a monitoring alert for ArgoCD sync failures and ensure regular backups of ArgoCD repositories.",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: argocd_sync_status_alert",
+      "alert name 2: k8s_pod_status_alert"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-89",
+    "title": "etcd high latency risk mitigation",
+    "category": "kubernetes",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "etcd leader election latency spikes > 10 seconds as seen in Prometheus",
+      "etcd request latency > 500ms for critical operations in Grafana dashboard",
+      "User facing payment processing delays or failures"
+    ],
+    "diagnosis_steps": [
+      "step 1: Run `kubectl get etcdcluster -n <namespace>` to check etcd cluster health",
+      "step 2: Check etcd leader election latency with `curl http://<etcd-leader-ip>:2379/v2/keys/etcd-cluster/leader`",
+      "step 3: Evaluate if the high latency is due to network issues by running `kubectl exec -it <etcd-pod> -- /bin/bash -c 'etcdctl endpoint health'`"
+    ],
+    "resolution_steps": [
+      "step 1: Scale up etcd nodes by running `kubectl scale statefulset etcd -n <namespace> --replicas=<new-replicas>`",
+      "step 2: Monitor the etcd cluster for stability and adjust the number of replicas if necessary",
+      "step 3: Verify the resolution with `kubectl get etcdcluster -n <namespace>` and check for healthy etcd nodes"
+    ],
+    "escalation": "If the etcd leader election latency remains > 10 seconds for more than 10 minutes, page the on-call SRE team and escalate to senior management",
+    "rollback": "Roll back to previous etcd configuration by scaling down the etcd nodes and reverting the changes if the issue persists after the initial resolution",
+    "prevention": "Implement etcd cluster health monitoring and auto-scaling policies, and regularly review etcd configuration for optimal performance",
+    "related_alerts": [
+      "etcd_leader_election_latency_alert",
+      "etcd_request_latency_alert"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-90",
+    "title": "Ingress controller 502 all pods unhealthy",
+    "category": "kubernetes",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "Prometheus alert: 'ingress_controller_status_code{code=\"502\"}' firing",
+      "Grafana dashboard shows all ingress controller pods in 'unhealthy' state",
+      "Users report 502 errors when trying to access services through the ingress"
+    ],
+    "diagnosis_steps": [
+      "step 1: kubectl get pods -n ingress-namespace -o wide; psql -h <db-host> -U <db-user> -d <db-name> -c \"SELECT * FROM health_check\"",
+      "step 2: Check the output for any pod names and statuses, and database health check results",
+      "step 3: If all pods are marked as 'unhealthy', check the ingress controller logs for errors"
+    ],
+    "resolution_steps": [
+      "step 1: kubectl delete pod <pod-name> -n ingress-namespace; kubectl scale deployment ingress-controller -n ingress-namespace --replicas=0; kubectl scale deployment ingress-controller -n ingress-namespace --replicas=1",
+      "step 2: Monitor the pods to ensure new ones are up and running",
+      "step 3: kubectl get pods -n ingress-namespace; kubectl describe pod <pod-name> -n ingress-namespace; curl -v http://<ingress-ip>"
+    ],
+    "escalation": "If the issue persists for more than 30 minutes, page the on-call SRE and Engineering Manager",
+    "rollback": "If the fix makes the situation worse, rollback to the previous state by redeploying the previous version of the ingress controller",
+    "prevention": "Implement automatic scaling and health checks for ingress controller pods, and ensure regular monitoring of ingress controller logs",
+    "related_alerts": [
+      "Prometheus alert: 'ingress_controller_status_code{code=\"502\"}'",
+      "Grafana dashboard: 'Ingress Controller Health'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-91",
+    "title": "EKS cluster autoscaler failure during surge",
+    "category": "kubernetes",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "High CPU and memory utilization metrics in Prometheus for the EKS cluster",
+      "Autoscaler failure events logged in AWS CloudWatch or Kubernetes events",
+      "User-facing delays or errors in payment processing services"
+    ],
+    "diagnosis_steps": [
+      "Step 1: `kubectl get events -n <namespace>` to check for autoscaler failure events",
+      "Step 2: `kubectl describe horizontalpodautoscaler <autoscaler-name> -n <namespace>` to inspect autoscaler status and metrics",
+      "Step 3: Determine if the issue is due to a resource bottleneck or misconfiguration"
+    ],
+    "resolution_steps": [
+      "Step 1: `eksctl scale nodegroup --nodes-min=<new-min-value> --nodes-max=<new-max-value> -g <cluster-name> -p <namespace>` to manually adjust node group size",
+      "Step 2: Review and possibly adjust the Horizontal Pod Autoscaler (HPA) and Cluster Autoscaler (CA) configurations",
+      "Step 3: `kubectl get pods -n <namespace>` to verify that the cluster is healthy and resources are being managed correctly"
+    ],
+    "escalation": "If the issue persists or leads to critical service disruptions, escalate to the on-call team via PagerDuty",
+    "rollback": "If the fix makes the situation worse, revert to the previous autoscaler configuration using `eksctl` commands and monitor for further issues",
+    "prevention": "Implement monitoring for resource utilization and set up alerts to proactively address potential issues",
+    "related_alerts": [
+      "Prometheus alert: 'eks_nodegroup_cpu_utilization_high'",
+      "Grafana dashboard: 'Kubernetes Cluster Health'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-92",
+    "title": "Kubernetes HPA misconfiguration rollback",
+    "category": "kubernetes",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "Alert fired in PagerDuty"
+    ],
+    "diagnosis_steps": [
+      "Check Grafana dashboard"
+    ],
+    "resolution_steps": [
+      "Follow standard procedure"
+    ],
+    "escalation": "Escalate to platform-sre lead after 15 mins",
+    "prevention": "Add monitoring threshold"
+  },
+  {
+    "runbook_id": "FTF-RB-93",
+    "title": "PodDisruptionBudget emergency override",
+    "category": "kubernetes",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "High alert count in Prometheus for `kubernetes_pod_disruption_budget_status_unhealthy`",
+      "Metric `kubernetes_pod_disruption_budget_status_unhealthy` shows a significant increase",
+      "User facing issues such as delayed or failed transactions"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get poddisruptionbudgets -n <namespace>` to identify affected PDB",
+      "step 2: Check the output for the `status` and `allowedDisruptions` fields",
+      "step 3: Decision point - if the allowed disruptions are exhausted, proceed with override"
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl patch poddisruptionbudget <pdb-name> -n <namespace> --patch '{\"spec\":{\"maxUnavailable\":0}}'` to override the PDB",
+      "step 2: Monitor the `allowedDisruptions` and `currentDisruptions` fields to ensure the override is effective",
+      "step 3: `kubectl get pods -n <namespace>` to verify that the pods are now being scheduled"
+    ],
+    "escalation": "When the `allowedDisruptions` count reaches 0 and the override is required, page the on-call SREs and the SRE lead",
+    "rollback": "If the override causes issues, revert by running `kubectl patch poddisruptionbudget <pdb-name> -n <namespace> --patch '{\"spec\":{\"maxUnavailable\":\"<original-value>\"}}'`",
+    "prevention": "Review and adjust the PDB configurations to ensure they align with the desired disruption budget",
+    "related_alerts": [
+      "kubernetes_pod_disruption_budget_status_unhealthy",
+      "kubernetes_pod_disruption_budget_status_current_disruptions"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-94",
+    "title": "EKS control plane API server degradation",
+    "category": "kubernetes",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "High CPU utilization or response time for API server requests as seen in Prometheus or Grafana",
+      "Prolonged API server unavailability or errors in Kubernetes cluster status as logged in AWS CloudWatch",
+      "User facing payment processing delays or failures"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get nodes` to check node status, look for any nodes in unschedulable state",
+      "step 2: `kubectl get cs` to inspect control plane component status, check for any errors or degraded states",
+      "step 3: Evaluate if the issue is related to resource constraints or network issues"
+    ],
+    "resolution_steps": [
+      "step 1: `aws eks update-kubeconfig --region <region> --name <cluster-name>` to ensure the latest cluster configuration is used",
+      "step 2: Scale up the control plane nodes if necessary, e.g., `eksctl scale nodegroup --cluster <cluster-name> --nodes-min 3 --nodes-max 5 --node-type t3.large`",
+      "step 3: Validate the resolution with `kubectl get cs` and monitor for any further issues"
+    ],
+    "escalation": "If the issue persists or affects more than 10% of the transaction volume, escalate to the on-call SRE team and PagerDuty",
+    "rollback": "If the fix exacerbates the situation, revert the changes using `eksctl delete nodegroup --cluster <cluster-name> --name <nodegroup-name>` and scale back to previous node configuration",
+    "prevention": "Implement automated monitoring and alerting for control plane resource utilization, and regularly review and update the node group configurations",
+    "related_alerts": [
+      "eks-control-plane-resource-utilization",
+      "eks-api-server-unavailability"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-95",
+    "title": "Kubernetes network policy blocking service traffic",
+    "category": "kubernetes",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: High latency or failure rate in service transactions",
+      "specific symptom 2 with metric name or log pattern: Increased latency metrics in Prometheus, e.g., 'http_request_duration_seconds_count' shows significant increase",
+      "specific symptom 3 user facing impact: Users experience delays or service unavailability"
+    ],
+    "diagnosis_steps": [
+      "step 1: Exact kubectl command to run: `kubectl get networkpolicies -n <namespace>` to list current network policies",
+      "step 2: What output to look for and what it means: Check for any policies that might be blocking traffic to or from the affected services",
+      "step 3: Decision point - what determines next action: Determine if the policy is correctly configured or if it needs to be modified or removed"
+    ],
+    "resolution_steps": [
+      "step 1: Exact remediation command with explanation: `kubectl edit networkpolicy <policy-name> -n <namespace>` to modify or delete the policy",
+      "step 2: Follow-up action: Verify the service traffic is flowing as expected",
+      "step 3: Verification command and expected healthy output: `kubectl get pods -n <namespace>` to ensure all pods are running and `kubectl exec -it <pod-name> -c <container-name> -- curl <service-url>` to check service availability"
+    ],
+    "escalation": "when to escalate: If the issue persists after resolution steps and affects more than 10% of transactions, page the on-call SRE team",
+    "rollback": "exact rollback procedure if fix makes situation worse: `kubectl apply -f <backup-network-policy-file>.yaml` to revert to the previous network policy configuration",
+    "prevention": "specific technical improvement to prevent recurrence: Implement a more granular and audited network policy management process, and regularly review network policies for correctness",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: 'high-latency-transactions'",
+      "alert name 2: 'service-unavailability'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-96",
+    "title": "PagerDuty alert storm response procedure",
+    "category": "monitoring",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "High alert volume in Prometheus with metric name `transactions_per_second` exceeding 10000 for more than 5 minutes",
+      "Frequent `Kafka broker down` alerts in PagerDuty with log pattern `Failed to send message to topic X`",
+      "User reports slow transaction processing times and failed transactions on the merchant API"
+    ],
+    "diagnosis_steps": [
+      "step 1: `kubectl get pods -n <namespace>` to check for any failed or crashing payment-service or order-service pods",
+      "step 2: `kubectl logs <pod_name> -n <namespace>` to review logs for any critical errors or warnings",
+      "step 3: `kafka-topics --describe --topic <topic_name> --bootstrap-server <broker_address>` to check topic health and partition replication",
+      "step 4: `psql -h <host> -U <username> -d <database> -c 'SELECT * FROM performance_metrics;'` to check database performance metrics",
+      "step 5: `redis-cli info` to check Redis server status and memory usage"
+    ],
+    "resolution_steps": [
+      "step 1: `kubectl scale deployment <service_name> --replicas=<new_replica_count> -n <namespace>` to increase the number of replicas for the affected service",
+      "step 2: Check if the issue is resolved by monitoring the alert volume and service performance",
+      "step 3: `kubectl get pods -n <namespace>` to verify the new number of replicas and their status"
+    ],
+    "escalation": "When the alert volume exceeds 1000 alerts in 10 minutes, page the on-call SRE and SRE lead",
+    "rollback": "If the fix makes the situation worse, revert to the previous state by `kubectl scale deployment <service_name> --replicas=<original_replica_count> -n <namespace>`",
+    "prevention": "Implement auto-scaling policies for services and topics in Kafka, and set up database performance monitoring to proactively address issues",
+    "related_alerts": [
+      "high-transaction-rate-alert",
+      "kafka-broker-down"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-97",
+    "title": "Prometheus scrape target down investigation",
+    "category": "monitoring",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty: 'prometheus scrape target <service-name> down' alert",
+      "specific symptom 2 with metric name or log pattern: 'no data received from <service-name>' in Prometheus metrics",
+      "specific symptom 3 user facing impact: potential service degradation or downtime for payment processing"
+    ],
+    "diagnosis_steps": [
+      "step 1: exact kubectl, psql, redis-cli or AWS CLI command to run: `kubectl get pods -n <namespace> -o wide` to check pod status and `kubectl describe pod <pod-name> -n <namespace>` for more details",
+      "step 2: what output to look for and what it means: look for any 'CrashLoopBackOff' or 'Error' state in pod status, and check for any error messages in the pod logs using `kubectl logs <pod-name> -n <namespace>`",
+      "step 3: decision point - what determines next action: if the pod is in 'CrashLoopBackOff' or 'Error' state, proceed to step 2; if the pod is healthy, check the network or service configuration"
+    ],
+    "resolution_steps": [
+      "step 1: exact remediation command with explanation: `kubectl restart pod <pod-name> -n <namespace>` to restart the pod, or `kubectl apply -f <service-deployment-file>.yaml -n <namespace>` to redeploy the service",
+      "step 2: follow-up action: check the pod status and logs again using the same commands as in step 1",
+      "step 3: verification command and expected healthy output: `kubectl get pods -n <namespace> -o wide` should show the pod in 'Running' state, and `kubectl logs <pod-name> -n <namespace>` should show no error messages"
+    ],
+    "escalation": "when to escalate: if the issue persists after the first restart and there are no clear logs or metrics indicating the root cause, escalate to the on-call team via PagerDuty",
+    "rollback": "exact rollback procedure if fix makes situation worse: revert to the previous deployment version using `kubectl rollout undo deployment/<deployment-name> -n <namespace>` and verify the service using the same commands as in step 3",
+    "prevention": "specific technical improvement to prevent recurrence: implement automated monitoring for pod health and redeployment using Kubernetes Horizontal Pod Autoscaler (HPA) and custom alerts in Prometheus",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1: 'prometheus_scrape_error{job=<service-name>}'",
+      "alert name 2: 'kubernetes_pod_status_crashloopbackoff{namespace=<namespace>}'"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-98",
+    "title": "Grafana no data during active incident",
+    "category": "monitoring",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "Alert fired in PagerDuty"
+    ],
+    "diagnosis_steps": [
+      "Check Grafana dashboard"
+    ],
+    "resolution_steps": [
+      "Follow standard procedure"
+    ],
+    "escalation": "Escalate to platform-sre lead after 15 mins",
+    "prevention": "Add monitoring threshold"
+  },
+  {
+    "runbook_id": "FTF-RB-99",
+    "title": "Alert Manager route misconfiguration fix",
+    "category": "monitoring",
+    "team": "platform-sre",
+    "severity_when_triggered": "P1",
+    "symptoms": [
+      "specific symptom 1 as seen in Prometheus or PagerDuty - Alert notifications not being sent to the correct PagerDuty service",
+      "specific symptom 2 with metric name or log pattern - Missing or incorrect log entries in the Alert Manager logs",
+      "specific symptom 3 user facing impact - Delayed or missing notifications for critical system issues"
+    ],
+    "diagnosis_steps": [
+      "step 1: exact kubectl, psql, redis-cli or AWS CLI command to run - `kubectl get routes -n monitoring` to check the routes in the Alert Manager namespace",
+      "step 2: what output to look for and what it means - Verify the target URLs and hostnames for the routes to ensure they match the expected configuration",
+      "step 3: decision point - what determines next action - If the routes are misconfigured, proceed to the resolution steps; if not, investigate other potential issues"
+    ],
+    "resolution_steps": [
+      "step 1: exact remediation command with explanation - `kubectl edit route alertmanager-main -n monitoring` to edit the route configuration and correct the target URLs or hostnames",
+      "step 2: follow-up action - Re-deploy any affected services or components to ensure they are aware of the new route configuration",
+      "step 3: verification command and expected healthy output - `kubectl get routes -n monitoring` to confirm the routes are correctly configured and `kubectl get pods -n monitoring` to ensure the Alert Manager pods are running without issues"
+    ],
+    "escalation": "when to escalate: specific threshold and who to page at FinTechFlow - If the issue persists after the fix or if it affects more than one service, escalate to the on-call SRE and the team lead",
+    "rollback": "exact rollback procedure if fix makes situation worse - `kubectl rollout undo deploy/alertmanager-main -n monitoring` to revert the Alert Manager deployment to the previous state",
+    "prevention": "specific technical improvement to prevent recurrence - Implement a regular health check for the Alert Manager routes and automate the route configuration checks as part of the CI/CD pipeline",
+    "related_alerts": [
+      "PromQL alert name or Grafana dashboard name 1 - `alert{job=\"alertmanager\", status=\"firing\"}`",
+      "alert name 2 - `alert{job=\"alertmanager\", status=\"resolved\"}`"
+    ]
+  },
+  {
+    "runbook_id": "FTF-RB-100",
+    "title": "Prometheus TSDB corruption recovery",
+    "category": "monitoring",
+    "team": "platform-sre",
+    "severity_when_triggered": "P2",
+    "symptoms": [
+      "Alert fired in PagerDuty"
+    ],
+    "diagnosis_steps": [
+      "Check Grafana dashboard"
+    ],
+    "resolution_steps": [
+      "Follow standard procedure"
+    ],
+    "escalation": "Escalate to platform-sre lead after 15 mins",
+    "prevention": "Add monitoring threshold"
+  }
+]

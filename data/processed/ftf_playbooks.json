@@ -1,0 +1,4545 @@
+[
+  {
+    "playbook_id": "FTF-PB-001",
+    "title": "PostgreSQL complete outage response",
+    "category": "database",
+    "severity": "P1",
+    "team": "payments-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-002",
+    "title": "PostgreSQL high connection count response",
+    "category": "database",
+    "severity": "P1",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: `SELECT count(*) FROM pg_stat_activity WHERE state = 'idle in transaction';`",
+          "action 2: Check Grafana dashboard for PostgreSQL connection metrics"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Identify and terminate unnecessary idle transactions using `SELECT pg_terminate_backend(pid);`",
+          "containment action 2: Increase PostgreSQL connection limit if necessary"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Adjust PostgreSQL configuration settings like `max_connections`",
+          "action 2: Optimize database queries and indexes"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm connection count is within acceptable limits",
+          "confirmation metric to check: `SELECT count(*) FROM pg_stat_activity;`"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we are currently addressing a PostgreSQL high connection count issue. We will keep you updated on the progress.",
+    "escalation_criteria": "specific condition requiring escalation beyond payments-sre: If the issue persists for more than 30 minutes or impacts critical services",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert PostgreSQL configuration changes and monitor for any further issues",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Review logs and identify root cause for future prevention"
+  },
+  {
+    "playbook_id": "FTF-PB-003",
+    "title": "PostgreSQL disk full emergency response",
+    "category": "database",
+    "severity": "P1",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: `df -h` to check disk usage",
+          "action 2: `pg_controldata /path/to/pg_data` to check PostgreSQL status"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: `pg_controldata /path/to/pg_data` to stop writes if necessary",
+          "containment action 2: `pg_ctl stop -m fast` to shut down PostgreSQL if needed"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: `pg_controldata /path/to/pg_data` to identify and remove unnecessary files",
+          "action 2: `pg_ctl start` to restart PostgreSQL"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: `df -h` to confirm disk space is available",
+          "confirmation metric to check: `pg_controldata /path/to/pg_data` to ensure PostgreSQL is running without issues"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected a PostgreSQL disk full issue and are actively working to resolve it. We will keep you updated.",
+    "escalation_criteria": "specific condition requiring escalation beyond payments-sre: If the issue persists for more than 30 minutes or causes downtime affecting critical services",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: `pg_ctl stop -m fast` followed by `pg_ctl start` to revert to the previous state",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Perform a post-incident review and update monitoring to prevent future incidents"
+  },
+  {
+    "playbook_id": "FTF-PB-004",
+    "title": "PostgreSQL replication lag response",
+    "category": "database",
+    "severity": "P2",
+    "team": "payments-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-005",
+    "title": "PostgreSQL deadlock resolution",
+    "category": "database",
+    "severity": "P2",
+    "team": "payments-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-006",
+    "title": "PgBouncer failure response",
+    "category": "database",
+    "severity": "P1",
+    "team": "payments-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-007",
+    "title": "Redis cache failure response",
+    "category": "database",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Redis health using Prometheus and Grafana",
+          "action 2: Review logs in Elasticsearch for any relevant error messages"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Migrate read-only traffic from affected services to fallback mechanisms",
+          "containment action 2: Temporarily disable write operations to affected services to prevent data corruption"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Restart Redis cluster nodes using Kubernetes commands",
+          "action 2: Validate service health and connectivity"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Monitor service performance and traffic using Grafana dashboards",
+          "confirmation metric to check: Ensure all services are responding within expected latency thresholds"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected an issue with our Redis cache and are actively resolving it. We will keep you updated on the progress.",
+    "escalation_criteria": "specific condition requiring escalation beyond platform-sre: If Redis recovery takes more than 30 minutes or if multiple critical services are affected",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert to previous stable state using Kubernetes rollbacks and restore Redis data from backups",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Review incident logs, update monitoring thresholds, and conduct a post-mortem analysis"
+  },
+  {
+    "playbook_id": "FTF-PB-008",
+    "title": "Redis memory exhaustion response",
+    "category": "database",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Grafana dashboard for Redis memory usage",
+          "action 2: Review PagerDuty alerts for Redis memory exhaustion notifications"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Scale up Redis instance or add more memory",
+          "containment action 2: Implement temporary rate limiting on high-traffic services"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Use Redis CLI to clear expired keys or flush memory",
+          "action 2: Review and optimize Redis configuration"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Monitor Redis memory usage on Grafana dashboard",
+          "confirmation metric to check: Ensure memory usage is within acceptable limits"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected an issue with Redis memory usage and are actively working to resolve it. We will keep you updated.",
+    "escalation_criteria": "specific condition requiring escalation beyond platform-sre: If Redis memory usage remains high after 30 minutes of resolution actions or if it impacts critical services",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert to previous Redis configuration and scale down resources if necessary",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Review and document the root cause of the issue, update monitoring and alerting, and perform a post-mortem"
+  },
+  {
+    "playbook_id": "FTF-PB-009",
+    "title": "Redis cluster node failure response",
+    "category": "database",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check PagerDuty alert for Redis node failure",
+          "action 2: Verify Grafana metrics for Redis cluster health"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Isolate failed node from the cluster",
+          "containment action 2: Migrate active keys to remaining nodes"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Start a new Redis node and rejoin the cluster",
+          "action 2: Perform a failover using Redis cluster commands"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm cluster health using Redis CLI",
+          "confirmation metric to check: Monitor Redis cluster status in Grafana"
+        ]
+      }
+    ],
+    "communication_template": "Short template message to send to merchants/stakeholders: 'We are currently addressing a Redis node failure. Expected resolution within 30 minutes.'",
+    "escalation_criteria": "specific condition requiring escalation beyond platform-sre: If the issue persists for more than 30 minutes or impacts critical services",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Roll back to the previous stable state using backups or recent snapshots",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Update monitoring and alerting configurations to prevent future failures"
+  },
+  {
+    "playbook_id": "FTF-PB-010",
+    "title": "Elasticsearch outage response",
+    "category": "database",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-011",
+    "title": "Elasticsearch high memory response",
+    "category": "database",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Grafana dashboard for Elasticsearch memory usage",
+          "action 2: Review Elasticsearch logs for any anomalies"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Scale out Elasticsearch nodes if memory pressure is detected",
+          "containment action 2: Temporarily disable indexing to reduce load"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Run Elasticsearch optimize command to reclaim disk space",
+          "action 2: Review and adjust Elasticsearch configuration parameters"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Monitor Elasticsearch memory usage and performance",
+          "confirmation metric to check: Ensure memory usage is below critical threshold"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected high memory usage in Elasticsearch. We are actively working on resolving the issue. We will keep you updated. Thank you.",
+    "escalation_criteria": "If the issue persists for more than 30 minutes without improvement, escalate to senior management.",
+    "rollback_procedure": "Exact steps to rollback if response makes situation worse: Revert Elasticsearch configuration changes and scale in nodes if necessary.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Immediate action required after resolution before closing incident: Update monitoring and alerting thresholds to prevent future incidents."
+  },
+  {
+    "playbook_id": "FTF-PB-012",
+    "title": "Elasticsearch red cluster recovery",
+    "category": "database",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Elasticsearch cluster health using `kubectl exec -it <es-pod-name> -- curl -X GET \"http://localhost:9200/_cluster/health?pretty\"`",
+          "action 2: Review Elasticsearch logs for any errors or warnings using `kubectl logs <es-pod-name>`"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Isolate affected nodes from the cluster if necessary",
+          "containment action 2: Temporarily disable writes to the cluster to prevent further data issues"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Restart affected Elasticsearch nodes using `kubectl delete pod <es-pod-name>`",
+          "action 2: Rebalance the cluster using `kubectl exec -it <es-pod-name> -- curl -X PUT \"http://localhost:9200/_cluster/settings\" -H 'Content-Type: application/json' -d '{\"transient\": {\"cluster.routing.rebalance.enable\": \"true\"}}'`"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm cluster health has returned to green using `kubectl exec -it <es-pod-name> -- curl -X GET \"http://localhost:9200/_cluster/health?pretty\"`",
+          "confirmation metric to check: Monitor cluster recovery using Grafana dashboard for Elasticsearch metrics"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have identified an issue with the Elasticsearch cluster and are actively working to resolve it. We will provide updates as the situation evolves.",
+    "escalation_criteria": "If the cluster remains red for more than 30 minutes or if the recovery process fails, escalate to the on-call SRE lead.",
+    "rollback_procedure": "If the recovery makes the situation worse, roll back to the previous state by restoring from a backup and re-enabling writes to the cluster.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Immediate action required after resolution before closing incident: Review the cause of the issue and update the monitoring and alerting to prevent future occurrences."
+  },
+  {
+    "playbook_id": "FTF-PB-013",
+    "title": "PostgreSQL backup failure response",
+    "category": "database",
+    "severity": "P2",
+    "team": "payments-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-014",
+    "title": "PostgreSQL slow query storm response",
+    "category": "database",
+    "severity": "P2",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Grafana dashboard for slow query alerts",
+          "action 2: Review logs for recent changes or deployments"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Pause non-critical queries or services to reduce load",
+          "containment action 2: Temporarily redirect read-only queries to read replicas"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Optimize slow queries using EXPLAIN and ANALYZE",
+          "action 2: Apply query optimizations or index updates"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm query performance improvements with Grafana",
+          "confirmation metric to check: Monitor query latency and throughput"
+        ]
+      }
+    ],
+    "communication_template": "We are currently experiencing a slow query issue on our PostgreSQL database. Our team is working on resolving this. We will keep you updated.",
+    "escalation_criteria": "If the issue persists for more than 30 minutes or impacts critical services, escalate to the on-call manager",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert recent code changes or optimizations, restore from backup if necessary",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Review incident logs, update monitoring, and document findings"
+  },
+  {
+    "playbook_id": "FTF-PB-015",
+    "title": "Redis eviction storm response",
+    "category": "database",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Redis monitoring in Grafana for high eviction rate",
+          "action 2: Review logs in ElasticSearch for recent changes or anomalies"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Increase Redis memory allocation if possible",
+          "containment action 2: Temporarily disable write operations to affected services"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Adjust Redis configuration to reduce eviction rate",
+          "action 2: Perform a manual eviction of non-critical data"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Monitor Redis status and eviction rate for stability",
+          "confirmation metric to check: Ensure no further evictions or service degradation"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we are currently addressing an issue with Redis evictions. We will keep you updated on the resolution.",
+    "escalation_criteria": "specific condition requiring escalation beyond platform-sre: If the issue persists after 30 minutes or affects more than one service",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert Redis configuration changes and restore previous state",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Review and optimize Redis configuration to prevent future issues"
+  },
+  {
+    "playbook_id": "FTF-PB-016",
+    "title": "PostgreSQL autovacuum bloat response",
+    "category": "database",
+    "severity": "P2",
+    "team": "payments-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-017",
+    "title": "Elasticsearch shard failure response",
+    "category": "database",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-018",
+    "title": "PostgreSQL sequence overflow response",
+    "category": "database",
+    "severity": "P1",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1: Check PagerDuty alert for PostgreSQL sequence overflow",
+          "action 2: Verify in Grafana dashboards for any related metrics"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Isolate affected PostgreSQL instance if necessary",
+          "containment action 2: Temporarily disable sequence usage if possible"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1: Update sequence manually with exact command",
+          "action 2: Review and apply any necessary database schema changes"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm sequence overflow has been resolved",
+          "confirmation metric to check: Monitor relevant Grafana metrics for stability"
+        ]
+      }
+    ],
+    "communication_template": "PostgreSQL sequence overflow detected and is being addressed. No immediate impact on services.",
+    "escalation_criteria": "If the issue persists beyond T+10 or affects more than one service",
+    "rollback_procedure": "If response makes situation worse, revert to previous state by rolling back the database to the last known good state.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Perform a post-mortem analysis to determine root cause and implement preventive measures."
+  },
+  {
+    "playbook_id": "FTF-PB-019",
+    "title": "Redis split-brain response",
+    "category": "database",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-020",
+    "title": "Database connection pool exhaustion",
+    "category": "database",
+    "severity": "P1",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Grafana dashboard for connection pool metrics",
+          "action 2: Review logs in Vault for recent errors or warnings"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Adjust database connection pool settings temporarily",
+          "containment action 2: Isolate affected services to prevent further degradation"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Increase connection pool size in PostgreSQL configuration",
+          "action 2: Review and optimize code for better database connection management"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Monitor Grafana dashboard for normalized metrics",
+          "confirmation metric to check: Ensure no new connection pool exhaustion alerts"
+        ]
+      }
+    ],
+    "communication_template": "We have detected an issue with database connection pools and are actively working to resolve it. We will provide further updates as the situation evolves.",
+    "escalation_criteria": "specific condition requiring escalation beyond payments-sre: If the issue persists beyond 30 minutes or impacts critical services",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert connection pool settings to previous values and review the changes made",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Conduct a root cause analysis and document findings for future prevention"
+  },
+  {
+    "playbook_id": "FTF-PB-021",
+    "title": "AWS ALB complete failure response",
+    "category": "network",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "Check PagerDuty for specific alert, execute `aws elb describe-load-balancers` to confirm failure",
+          "Verify Grafana dashboard for service health metrics"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "Drain existing traffic from the failed ALB by configuring routing in ALB to redirect to healthy instances",
+          "Update DNS records to point to a backup ALB or a static IP with a temporary web server"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "Recover the failed ALB by restarting or replacing the instance(s) associated with the ALB",
+          "Migrate traffic back to the recovered ALB"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "Validate service availability and performance",
+          "Check logs for any anomalies"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected an issue with our AWS ALB and are actively working on a resolution. We will keep you updated on the status.",
+    "escalation_criteria": "If the ALB failure is not resolved within 30 minutes or if it affects more than 50% of our services, escalation to the senior management team is required.",
+    "rollback_procedure": "If the resolution makes the situation worse, revert to the previous state by restoring the DNS records to the previous ALB and rolling back the configuration changes.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Immediate action required after resolution before closing incident: Review the root cause, update the monitoring and alerting systems, and document the findings for future reference."
+  },
+  {
+    "playbook_id": "FTF-PB-022",
+    "title": "Route53 DNS outage response",
+    "category": "network",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-023",
+    "title": "Kafka broker failure response",
+    "category": "network",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-024",
+    "title": "Kafka consumer lag critical response",
+    "category": "network",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-025",
+    "title": "Cloudflare outage response",
+    "category": "network",
+    "severity": "P1",
+    "team": "security-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "Check PagerDuty alert for Cloudflare status",
+          "Verify Grafana metrics for network latency and failures"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "Isolate affected services from external network traffic",
+          "Redirect DNS requests to internal DNS servers if necessary"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "Contact Cloudflare support for assistance",
+          "Update DNS configurations to ensure service availability"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "Monitor service health using Prometheus and Grafana",
+          "Confirm service availability and performance"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we are currently experiencing issues with our external network provider Cloudflare. Our team is actively working to resolve the issue and will keep you updated.",
+    "escalation_criteria": "If the issue persists for more than 30 minutes without resolution, escalate to senior management",
+    "rollback_procedure": "If the initial response makes the situation worse, revert to the previous DNS settings and contact Cloudflare support for further assistance",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Perform a post-mortem analysis to identify root causes and improve incident response procedures"
+  },
+  {
+    "playbook_id": "FTF-PB-026",
+    "title": "VPC connectivity loss response",
+    "category": "network",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-027",
+    "title": "AWS NAT Gateway failure response",
+    "category": "network",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-028",
+    "title": "Kafka partition leader failure",
+    "category": "network",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-029",
+    "title": "Cloudflare false positive response",
+    "category": "network",
+    "severity": "P2",
+    "team": "security-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Cloudflare dashboard for alerts and logs",
+          "action 2: Review relevant Grafana dashboards for network anomalies"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Isolate affected services by disabling or routing traffic away from Cloudflare",
+          "containment action 2: Temporarily block suspicious IP addresses or domains"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Re-enable services and restore normal traffic routing",
+          "action 2: Re-evaluate and adjust security rules on Cloudflare"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm that the issue has been resolved and services are functioning normally",
+          "confirmation metric to check: Monitor network traffic and service health for 15 minutes"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have identified and resolved a false positive alert from Cloudflare. Services are back to normal. Thank you for your patience.",
+    "escalation_criteria": "specific condition requiring escalation beyond security-sre: If the issue persists after resolution or if there are indications of a real security breach",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: If the resolution causes further issues, revert to the previous configuration and review the steps taken",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Update security logs and perform a post-mortem analysis to prevent future occurrences"
+  },
+  {
+    "playbook_id": "FTF-PB-030",
+    "title": "Route53 failover triggered response",
+    "category": "network",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Route53 health status via AWS Management Console",
+          "action 2: Review CloudWatch logs for any related error messages"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Verify DNS records and Route53 failover settings",
+          "containment action 2: Temporarily disable failover if DNS records are incorrect"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Correct DNS records and re-enable failover",
+          "action 2: Validate DNS resolution from external network"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Monitor Route53 health status and DNS resolution",
+          "confirmation metric to check: Ensure all services are accessible and transactions are flowing"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected a Route53 failover issue. We are actively working to resolve it. Please stand by.",
+    "escalation_criteria": "specific condition requiring escalation beyond platform-sre: If the issue persists for more than 30 minutes without resolution",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert DNS changes to previous version and disable failover",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Document the root cause and update DNS management procedures"
+  },
+  {
+    "playbook_id": "FTF-PB-031",
+    "title": "Kafka topic corruption response",
+    "category": "network",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-032",
+    "title": "ALB target group health check failure",
+    "category": "network",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-033",
+    "title": "AWS Security Group lockout response",
+    "category": "network",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "Check PagerDuty for specific alert",
+          "Review Grafana dashboard for threshold breaches"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "Isolate affected services from the network",
+          "Update security group rules to restrict unauthorized access"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "Restore normal network access",
+          "Re-evaluate and update security group rules"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "Run network connectivity tests",
+          "Confirm security group rules are correctly implemented"
+        ]
+      }
+    ],
+    "communication_template": "Dear merchants and stakeholders, we have detected an issue with our AWS Security Group and are taking immediate action to resolve it. We will keep you updated on the progress.",
+    "escalation_criteria": "If the issue persists beyond 30 minutes or affects more than one service, escalate to senior management.",
+    "rollback_procedure": "If the resolution makes the situation worse, revert to the previous security group rules and perform a rollback to the previous state.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Immediate action required to review and enhance security measures, update incident documentation, and notify stakeholders of the resolution."
+  },
+  {
+    "playbook_id": "FTF-PB-034",
+    "title": "Cloudflare DDoS attack response",
+    "category": "network",
+    "severity": "P1",
+    "team": "security-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "Monitor Cloudflare dashboard for DDoS attack indicators",
+          "Check Grafana dashboards for unusual traffic patterns"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "Activate rate limiting rules on Cloudflare",
+          "Deploy BGP prefix hijacking mitigation",
+          "Temporarily disable non-essential services"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "Configure Cloudflare's Web Application Firewall (WAF) rules",
+          "Review and adjust firewall rules in EKS cluster",
+          "Restart affected services if necessary"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "Verify traffic patterns have normalized",
+          "Check service availability and performance",
+          "Confirm no data loss or corruption"
+        ]
+      }
+    ],
+    "communication_template": "We are currently experiencing a DDoS attack and are taking immediate steps to mitigate its impact. We will keep you updated on the progress.",
+    "escalation_criteria": "If the attack persists for more than 30 minutes or results in significant service disruption",
+    "rollback_procedure": "Revert to previous configuration if current mitigation strategies fail to resolve the issue",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Conduct a post-mortem to review the attack and mitigation strategies, and update security policies accordingly"
+  },
+  {
+    "playbook_id": "FTF-PB-035",
+    "title": "Kafka duplicate message response",
+    "category": "network",
+    "severity": "P1",
+    "team": "payments-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-036",
+    "title": "Route53 wrong region failover",
+    "category": "network",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Route53 health status and logs",
+          "action 2: Verify DNS resolution in affected regions"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Update Route53 failover policy to correct region",
+          "containment action 2: Notify relevant services to switch to correct region"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Validate DNS resolution across all regions",
+          "action 2: Confirm all services are using the correct region"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Monitor DNS health and service availability",
+          "confirmation metric to check: Ensure no transactions are being processed incorrectly"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have identified and are resolving an issue with Route53 in the wrong region. We will keep you updated.",
+    "escalation_criteria": "specific condition requiring escalation beyond platform-sre: If the issue persists for more than 30 minutes or affects over 10% of daily transactions",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert Route53 configuration to previous state and re-evaluate",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Conduct a root cause analysis and update monitoring tools"
+  },
+  {
+    "playbook_id": "FTF-PB-037",
+    "title": "AWS Transit Gateway failure response",
+    "category": "network",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-038",
+    "title": "Kafka consumer group rebalance storm",
+    "category": "network",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Kafka cluster health using Kafka Manager",
+          "action 2: Verify Kafka consumer group offsets in Kafka Manager"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Pause consumer group in affected service",
+          "containment action 2: Temporarily redirect traffic to unaffected services if possible"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Rebalance consumer group using Kafka Admin Client",
+          "action 2: Monitor rebalancing process using Kafka Manager"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm all consumer groups are back to normal state",
+          "confirmation metric to check: Verify no unprocessed transactions in Kafka topics"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we are currently addressing a Kafka consumer group rebalance storm. We will keep you updated on the progress. Thanks for your patience.",
+    "escalation_criteria": "specific condition requiring escalation beyond platform-sre: If rebalance does not complete within 30 minutes or if multiple services are affected",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert any changes made to services and consumer groups to the previous state",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Update monitoring tools and runbooks with any changes or lessons learned"
+  },
+  {
+    "playbook_id": "FTF-PB-039",
+    "title": "Cloudflare certificate renewal response",
+    "category": "network",
+    "severity": "P2",
+    "team": "security-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "Check Cloudflare dashboard for certificate renewal status",
+          "Verify PagerDuty alert or Grafana threshold triggered"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "Ensure all services are still accessible",
+          "Disable Cloudflare SSL encryption temporarily if necessary"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "Reissue Cloudflare certificate with updated details",
+          "Update DNS records with new certificate"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "Test HTTPS connectivity to all services",
+          "Confirm services are functioning as expected"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected a Cloudflare certificate renewal and are resolving it. Please expect minimal service disruptions. For further details, visit our status page.",
+    "escalation_criteria": "If resolution exceeds 30 minutes or if services are unavailable for more than 5 minutes",
+    "rollback_procedure": "If response makes situation worse, revert to previous certificate by updating DNS records and enabling Cloudflare SSL encryption with old certificate",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Perform a post-mortem analysis, update certificate management procedures, and notify relevant teams of any changes"
+  },
+  {
+    "playbook_id": "FTF-PB-040",
+    "title": "AWS ALB stickiness session loss response",
+    "category": "network",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check AWS CloudWatch Logs for session loss events",
+          "action 2: Verify in Grafana dashboard for any related metrics anomalies"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Review AWS ALB configuration and ensure stickiness settings are correct",
+          "containment action 2: Temporarily disable stickiness if necessary"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Reconfigure AWS ALB stickiness settings",
+          "action 2: Validate new settings with network and application tests"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Monitor Grafana dashboards for stability",
+          "confirmation metric to check: Confirm no further session loss events in CloudWatch"
+        ]
+      }
+    ],
+    "communication_template": "We have detected an issue with stickiness session loss in our AWS ALB. We are actively working on resolving it and will keep you updated.",
+    "escalation_criteria": "If the issue persists beyond 30 minutes or affects more than 10% of transactions, escalate to senior management.",
+    "rollback_procedure": "If the resolution makes the situation worse, revert to the previous configuration by restoring the original ALB stickiness settings and redeploying the services.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Immediately review and document the incident to update the incident response playbook and ensure no future occurrences."
+  },
+  {
+    "playbook_id": "FTF-PB-041",
+    "title": "Payment service OOMKilled response",
+    "category": "memory",
+    "severity": "P1",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Grafana dashboard for OOMKilled alerts",
+          "action 2: Verify in Kubernetes dashboard if the payment-service pod is OOMKilled"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Scale down the payment-service pod to prevent further OOMKilled events",
+          "containment action 2: Initiate a rolling update to the payment-service to apply memory optimization patches"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Apply the updated configuration to the payment-service pod",
+          "action 2: Monitor the payment-service pod for stability and performance"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm that the payment-service is running without OOMKilled events",
+          "confirmation metric to check: Check the payment-service pod's memory usage in Grafana"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected an OOMKilled event in the payment-service. We are actively working to resolve the issue and will keep you updated.",
+    "escalation_criteria": "specific condition requiring escalation beyond payments-sre: If the issue persists for more than 30 minutes or affects multiple services",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Roll back to the previous stable configuration and initiate a full investigation",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Review the root cause and update the service's memory configuration"
+  },
+  {
+    "playbook_id": "FTF-PB-042",
+    "title": "Java GC overhead limit response",
+    "category": "memory",
+    "severity": "P1",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Grafana dashboard for Java GC overhead limit alerts",
+          "action 2: Review logs for related Java process"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Temporarily increase Java heap size in the application configuration",
+          "containment action 2: Apply JVM garbage collection tuning parameters"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Adjust heap size and GC settings in the application",
+          "action 2: Monitor application performance and GC behavior"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm that GC overhead limit is no longer triggered",
+          "confirmation metric to check: Check Grafana metrics for GC performance"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected a Java GC overhead limit issue and are taking steps to resolve it. We will keep you updated.",
+    "escalation_criteria": "specific condition requiring escalation beyond payments-sre: If the issue persists for more than 30 minutes or affects multiple critical services",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert to previous configuration settings and conduct a thorough review of changes made",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Conduct a root cause analysis and document findings for future reference"
+  },
+  {
+    "playbook_id": "FTF-PB-043",
+    "title": "JVM memory leak response",
+    "category": "memory",
+    "severity": "P2",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Use JMX or JConsole to monitor JVM heap and non-heap memory usage.",
+          "action 2: Check logs for any memory-related exceptions or warnings."
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Increase JVM heap size if memory usage is consistently high.",
+          "containment action 2: Implement or enhance memory profiling tools to identify the leak."
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Deploy a JVM patch or fix if identified.",
+          "action 2: Optimize code or adjust configuration to prevent future leaks."
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Monitor memory usage over the next hour to ensure the issue is resolved.",
+          "confirmation metric to check: Compare current memory usage with historical data."
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected a potential JVM memory leak issue in our system. We are actively working on resolving it and will keep you updated.",
+    "escalation_criteria": "If the issue persists after 30 minutes or causes significant downtime, escalate to the SRE leadership team.",
+    "rollback_procedure": "If the resolution makes the situation worse, roll back to the previous version of the service and investigate further.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Immediate action required after resolution before closing incident: Conduct a root cause analysis and update the codebase with the fix."
+  },
+  {
+    "playbook_id": "FTF-PB-044",
+    "title": "Python worker OOM response",
+    "category": "memory",
+    "severity": "P2",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Grafana for OOM alerts and confirm issue with `kubectl describe pod <pod-name>`",
+          "action 2: Verify if the alert is related to a specific Python worker process with `kubectl top pod <pod-name>`"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Scale down the affected service to prevent further resource consumption with `kubectl scale --replicas=0 deployment/<service-name>`",
+          "containment action 2: Temporarily pause non-critical tasks or services to reduce load"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Scale back the service to a safe number of replicas with `kubectl scale --replicas=<number> deployment/<service-name>`",
+          "action 2: Review and optimize the Python worker code, ensuring proper memory management and resource usage"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Monitor the service with Grafana and ensure OOM alerts are no longer triggered",
+          "confirmation metric to check: Verify with `kubectl top pod <pod-name>` that the resource usage is within acceptable limits"
+        ]
+      }
+    ],
+    "communication_template": "Short template message to send to merchants/stakeholders: 'Dear [Merchant Name], we have detected an issue with one of our systems and are actively working to resolve it. We will keep you updated. Thank you for your patience.'",
+    "escalation_criteria": "specific condition requiring escalation beyond payments-sre: If the issue persists and impacts more than one service, or if it cannot be resolved within 30 minutes, escalate to the senior management team.",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: If the resolution action causes additional issues, revert the service to the previous state with `kubectl scale --replicas=<previous-number> deployment/<service-name>` and review the changes made.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Review the incident with the team to identify root causes and implement preventive measures, update the relevant documentation, and communicate the resolution to stakeholders."
+  },
+  {
+    "playbook_id": "FTF-PB-045",
+    "title": "Node.js heap exhaustion response",
+    "category": "memory",
+    "severity": "P2",
+    "team": "payments-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-046",
+    "title": "Redis maxmemory response",
+    "category": "memory",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: `kubectl get pods -n <namespace> -o json | jq '.items[].status.containerStatuses[] | select(.name == \"<redis-pod-name>\") | {container: .name, memoryUsage: .state.running.memoryUsage}`",
+          "action 2: Review Grafana dashboard for Redis memory usage"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Increase Redis maxmemory setting if safe and feasible",
+          "containment action 2: Implement Redis eviction policy if necessary"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: `kubectl edit configmap <redis-configmap> -n <namespace> -o yaml` and update `maxmemory` setting",
+          "action 2: Monitor system for stability after changes"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm Redis memory usage is within acceptable limits",
+          "confirmation metric to check: Review Grafana dashboard for new memory usage"
+        ]
+      }
+    ],
+    "communication_template": "Alert: Redis maxmemory exceeded. We are taking steps to resolve this issue. Expected resolution within 30 minutes. For further updates, please follow our status page.",
+    "escalation_criteria": "If resolution is not achieved within 30 minutes or if the issue impacts critical services, escalate to senior management",
+    "rollback_procedure": "If response makes the situation worse, rollback by reverting to previous Redis configuration settings",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Immediate action required after resolution before closing incident: Update incident documentation, review incident, and update monitoring and alerting to prevent future occurrences"
+  },
+  {
+    "playbook_id": "FTF-PB-047",
+    "title": "Kafka Streams OOMKilled response",
+    "category": "memory",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-048",
+    "title": "Elasticsearch memory exhaustion response",
+    "category": "memory",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: `kubectl get pods -n <namespace> | grep elasticsearch` to check pod status",
+          "action 2: `kubectl top pod -n <namespace> <pod_name> --containers` to check CPU and memory usage"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: `kubectl scale deployment <elasticsearch_deployment> --replicas=0` to drain the pod",
+          "containment action 2: `kubectl describe pod <pod_name> -n <namespace>` to gather more details"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: `kubectl scale deployment <elasticsearch_deployment> --replicas=<new_replicas>` to restore the service",
+          "action 2: `kubectl apply -f <elasticsearch_configmap>` to apply any necessary configuration changes"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: `kubectl get pods -n <namespace> | grep elasticsearch` to ensure pods are healthy",
+          "confirmation metric to check: `kubectl top pod -n <namespace> <pod_name> --containers` to ensure memory usage is within limits"
+        ]
+      }
+    ],
+    "communication_template": "Elasticsearch memory exhaustion detected. Response initiated to mitigate impact on service availability.",
+    "escalation_criteria": "If Elasticsearch pods remain unresponsive or the issue spreads to other services, escalate to senior management.",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: `kubectl scale deployment <elasticsearch_deployment> --replicas=<original_replicas>` and revert any recent configuration changes.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Review logs for root cause, update monitoring thresholds, and document findings for future reference."
+  },
+  {
+    "playbook_id": "FTF-PB-049",
+    "title": "Java metaspace exhaustion response",
+    "category": "memory",
+    "severity": "P2",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Grafana dashboard for Java metaspace exhaustion alerts",
+          "action 2: Verify PagerDuty alert details"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Scale down affected services if possible",
+          "containment action 2: Initiate failover or load balancing if necessary"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Increase metaspace size in JVM settings",
+          "action 2: Restart affected services to apply changes"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Monitor Grafana dashboards for resolution",
+          "confirmation metric to check: Check metaspace usage and transaction throughput"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected a metaspace exhaustion issue in our Java services. Immediate actions are being taken to resolve this. We will keep you updated.",
+    "escalation_criteria": "specific condition requiring escalation beyond payments-sre: If the issue persists after 30 minutes or affects more than one service",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Rollback JVM settings to previous configuration and revert any service restarts",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Review logs and metrics for root cause analysis, update documentation, and inform relevant teams"
+  },
+  {
+    "playbook_id": "FTF-PB-050",
+    "title": "Container memory limit breach response",
+    "category": "memory",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-051",
+    "title": "EBS volume full emergency response",
+    "category": "storage",
+    "severity": "P1",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Grafana for EBS volume usage and identify the full volume",
+          "action 2: Notify team via Slack or email"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Initiate read-only mode for the affected EBS volume",
+          "containment action 2: Redirect read-only traffic to a backup or secondary volume"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Resize the EBS volume to increase capacity",
+          "action 2: Migrate data from the old volume to the new one"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm EBS volume usage is within limits",
+          "confirmation metric to check: Monitor EBS volume usage through Grafana"
+        ]
+      }
+    ],
+    "communication_template": "EBS volume full alert - Immediate action required to prevent service disruption. Status update will be provided shortly.",
+    "escalation_criteria": "specific condition requiring escalation beyond payments-sre: If the issue persists after 30 minutes or if the volume cannot be resized due to underlying issues",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Restore the EBS volume to a previous snapshot and revert to the original configuration",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Update monitoring and alerting to prevent future incidents, document the incident for future reference"
+  },
+  {
+    "playbook_id": "FTF-PB-052",
+    "title": "Kafka disk full response",
+    "category": "storage",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: `df -h` to check disk usage",
+          "action 2: Check Kafka broker logs for any related errors"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Increase Kafka topic retention policy",
+          "containment action 2: Temporarily reduce message production rate"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: `resize2fs /path/to/kafka/data` to resize filesystem",
+          "action 2: Add more storage to Kafka cluster"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm disk usage is within acceptable levels",
+          "confirmation metric to check: `df -h` and Kafka broker health checks"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected a Kafka disk full alert and are actively working to resolve the issue. We will keep you updated.",
+    "escalation_criteria": "specific condition requiring escalation beyond platform-sre: If the issue persists for more than 30 minutes without resolution or causes service disruptions",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert any temporary changes made during the containment phase and revert to previous storage configuration",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Review and update disk management policies and procedures to prevent future occurrences"
+  },
+  {
+    "playbook_id": "FTF-PB-053",
+    "title": "S3 access failure response",
+    "category": "storage",
+    "severity": "P2",
+    "team": "data-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "Check PagerDuty alert for S3 access failure",
+          "Verify S3 access logs using AWS CloudWatch"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "Isolate affected services from S3",
+          "Ensure no new transactions are processed through affected services"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "Review AWS S3 access policies and permissions",
+          "Reinstate or correct access permissions"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "Test access to S3 from application services",
+          "Confirm all services can access S3 again"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected an S3 access issue. We are currently working to resolve this and will keep you updated.",
+    "escalation_criteria": "If the issue persists for more than 30 minutes or affects more than 10% of daily transactions",
+    "rollback_procedure": "If the response makes the situation worse, revert to the previous state by restoring correct access permissions and re-enabling affected services.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Immediate review of S3 access policies and permissions to prevent future issues. Document the incident and its resolution for future reference."
+  },
+  {
+    "playbook_id": "FTF-PB-054",
+    "title": "EBS volume detach stuck response",
+    "category": "storage",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-055",
+    "title": "PostgreSQL WAL disk full response",
+    "category": "storage",
+    "severity": "P1",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Run `df -h` to check disk usage and identify the full partition.",
+          "action 2: Check the PostgreSQL logs for any WAL-related errors."
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Temporarily disable write operations on the affected service to prevent further growth of WAL files.",
+          "containment action 2: Increase the size of the WAL disk or remove unnecessary files to free up space."
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Use `pg_archive_command` to archive old WAL files to another storage location.",
+          "action 2: Optimize database configurations or perform a database vacuum to reduce WAL generation."
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Monitor the disk usage and PostgreSQL logs to ensure the issue is resolved.",
+          "confirmation metric to check: Confirm that the WAL disk usage is below the critical threshold."
+        ]
+      }
+    ],
+    "communication_template": "Notification: PostgreSQL WAL disk full on [service name]. Immediate action taken to prevent data loss. Monitoring and resolution ongoing.",
+    "escalation_criteria": "specific condition requiring escalation beyond payments-sre: If the issue persists after 30 minutes or if the service downtime exceeds 15 minutes.",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Restore the database from the last known good backup if the current resolution makes the situation worse.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Review the root cause and update the monitoring thresholds to prevent future occurrences."
+  },
+  {
+    "playbook_id": "FTF-PB-056",
+    "title": "S3 lifecycle delete active data response",
+    "category": "storage",
+    "severity": "P1",
+    "team": "data-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "Check S3 lifecycle policy logs for recent deletions",
+          "Review relevant Grafana dashboards for anomalies"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "Disable S3 lifecycle policy temporarily",
+          "Block API access to S3 from suspicious IP addresses"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "Restore deleted data from S3 versioning if enabled",
+          "Update S3 lifecycle policy to prevent further deletions"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "Confirm data integrity and availability",
+          "Monitor S3 lifecycle logs for any further issues"
+        ]
+      }
+    ],
+    "communication_template": "We have detected an unauthorized S3 lifecycle delete action. We are taking steps to contain and resolve the issue. We will provide updates as necessary.",
+    "escalation_criteria": "If the issue persists for more than 30 minutes or impacts critical services, escalate to the senior management team.",
+    "rollback_procedure": "Re-enable the S3 lifecycle policy and restore any data that was deleted. Ensure all access controls are re-applied.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Perform a root cause analysis and update security policies. Conduct a training session for the team on S3 lifecycle management best practices."
+  },
+  {
+    "playbook_id": "FTF-PB-057",
+    "title": "Elasticsearch translog corruption response",
+    "category": "storage",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-058",
+    "title": "EBS IOPS exhaustion response",
+    "category": "storage",
+    "severity": "P2",
+    "team": "payments-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-059",
+    "title": "Kafka log corruption response",
+    "category": "storage",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Run `kafka-topics.sh --describe --topic <topic-name> --bootstrap-server <bootstrap-server>` to check topic status",
+          "action 2: Check `kafka-log-cleaner` logs for any errors"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Isolate affected Kafka brokers by stopping the service on those nodes",
+          "containment action 2: Temporarily disable topic write operations to prevent further corruption"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Use `kafka-reassign-partitions.sh` to create a new topic with fresh log segments",
+          "action 2: Migrate data from the corrupted topic to the new one"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm topic is functioning correctly with `kafka-topics.sh --describe`",
+          "confirmation metric to check: Monitor topic lag and consumer offsets in Grafana"
+        ]
+      }
+    ],
+    "communication_template": "Short template message to send to merchants/stakeholders: 'We have detected an issue with our Kafka log and are working to resolve it. We will keep you updated.'",
+    "escalation_criteria": "specific condition requiring escalation beyond platform-sre: If resolution exceeds 30 minutes or if the issue affects more than one Kafka cluster",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert the Kafka reassignment and restore the original topic configuration",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Update monitoring and logging to prevent future occurrences, and document the incident for future reference"
+  },
+  {
+    "playbook_id": "FTF-PB-060",
+    "title": "EBS filesystem corruption response",
+    "category": "storage",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1: Check PagerDuty alert for EBS filesystem corruption",
+          "action 2: Verify in Grafana that the corruption is affecting the filesystem"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Isolate affected EBS volume to prevent further issues",
+          "containment action 2: Ensure no new transactions are written to the corrupted volume"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1: Use AWS EBS snapshot to restore the volume from a known good state",
+          "action 2: Monitor the restored volume for stability"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm that the filesystem is stable and transactions are flowing normally",
+          "confirmation metric to check: Monitor transaction volume and error rates"
+        ]
+      }
+    ],
+    "communication_template": "EBS filesystem corruption detected. Immediate steps are being taken to restore service. We will keep you updated.",
+    "escalation_criteria": "If the issue persists after 30 minutes or if the service is down for more than 15 minutes",
+    "rollback_procedure": "If the response makes the situation worse, revert to the last known good state using the previous EBS snapshot.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Perform a root cause analysis and update monitoring to prevent future occurrences."
+  },
+  {
+    "playbook_id": "FTF-PB-061",
+    "title": "Payment service complete outage response",
+    "category": "application",
+    "severity": "P1",
+    "team": "payments-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-062",
+    "title": "Circuit breaker open response",
+    "category": "application",
+    "severity": "P1",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "Check PagerDuty alert for circuit breaker status",
+          "Review Grafana metrics for circuit breaker metrics"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "Restart affected services",
+          "Implement temporary circuit breaker bypass if safe"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "Analyze logs and metrics for root cause",
+          "Implement permanent fix for root cause"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "Confirm services are stable",
+          "Check for any residual issues"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected an issue with our payment processing system. We are actively working to resolve it. We will keep you updated.",
+    "escalation_criteria": "If resolution is not achieved within 30 minutes or if the issue affects more than 10% of transactions, escalate to senior management.",
+    "rollback_procedure": "If the response makes the situation worse, revert to the previous stable state by rolling back the recent changes or service restarts.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Perform a post-mortem analysis to identify and document the root cause, and update the incident response plan accordingly."
+  },
+  {
+    "playbook_id": "FTF-PB-063",
+    "title": "Duplicate payment detection response",
+    "category": "application",
+    "severity": "P1",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Grafana dashboard for duplicate payment alerts",
+          "action 2: Review logs from transaction-processor service for recent duplicate payment occurrences"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Temporarily disable payment-service to prevent further duplicates",
+          "containment action 2: Apply rate limiting on payment-service API"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Investigate root cause using Prometheus and Grafana",
+          "action 2: Implement a deduplication mechanism in payment-service"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Re-enable payment-service and monitor for new duplicate payments",
+          "confirmation metric to check: Ensure no new duplicates are detected over the next 1 hour"
+        ]
+      }
+    ],
+    "communication_template": "Dear [Merchant Name], we have detected a potential duplicate payment issue. Our team is actively working on resolving it. We will keep you updated. Thank you for your patience.",
+    "escalation_criteria": "specific condition requiring escalation beyond payments-sre: If the issue persists for more than 30 minutes or affects more than 1000 transactions",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Re-enable payment-service and revert rate limiting if it causes service degradation",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Document the root cause and update the deduplication mechanism in the codebase"
+  },
+  {
+    "playbook_id": "FTF-PB-064",
+    "title": "Fraud detection outage response",
+    "category": "application",
+    "severity": "P1",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check PagerDuty for alerts and Grafana for thresholds",
+          "action 2: Verify the status of fraud-detection-service"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Isolate the affected service if necessary",
+          "containment action 2: Stop further propagation of the issue"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Restart the fraud-detection-service using Kubernetes command",
+          "action 2: Reconcile the service with the latest stable code from Git"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Validate the service is running without issues",
+          "confirmation metric to check: Monitor the service health using Prometheus and Grafana"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have identified an outage in the fraud detection service. Immediate actions are being taken to resolve the issue. Updates will be provided as they become available.",
+    "escalation_criteria": "specific condition requiring escalation beyond payments-sre: If the issue persists for more than 30 minutes without resolution or affects critical services beyond the fraud-detection-service",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Roll back to the previous version using Git and redeploy the service",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Conduct a post-mortem analysis, document the issue, and update the incident resolution strategy"
+  },
+  {
+    "playbook_id": "FTF-PB-065",
+    "title": "Transaction processor failure response",
+    "category": "application",
+    "severity": "P1",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "Check Grafana dashboards for transaction processor metrics",
+          "Run command: `kubectl get pods -n transaction-processor` to check for running pods"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "Scale down transaction-processor service",
+          "Execute command: `kubectl scale deployment transaction-processor --replicas=0 -n transaction-processor`"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "Identify and fix the root cause",
+          "Apply fix: `kubectl apply -f transaction-processor-deployment.yaml -n transaction-processor`"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "Verify service health using `kubectl get pods -n transaction-processor`",
+          "Check transaction-processor metrics in Grafana"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected an issue with the transaction processor. Our team is actively working on resolving it. We will provide further updates as the situation progresses.",
+    "escalation_criteria": "If the issue persists for more than 30 minutes and the root cause is not identified, escalate to the senior management team.",
+    "rollback_procedure": "If the resolution makes the situation worse, revert to the previous deployment by running `kubectl apply -f transaction-processor-deployment-previous.yaml -n transaction-processor`",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Immediate action required to update the monitoring and logging to prevent similar issues in the future. Conduct a post-mortem meeting to document findings and improvements."
+  },
+  {
+    "playbook_id": "FTF-PB-066",
+    "title": "Bad deployment rollback procedure",
+    "category": "application",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "Check PagerDuty alert for specific error message or threshold breach",
+          "Review Grafana dashboard for sudden degradation in key metrics"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "Roll back the deployment to the previous version using GitOps tool",
+          "Implement service level overrides to reduce load on affected services"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "Apply the rollback procedure and confirm the service returns to normal operation",
+          "Identify and address the root cause of the issue"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "Monitor service health and transaction flow for any anomalies",
+          "Confirm all affected services are functioning as expected"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected a critical issue with our deployment and are rolling back to the previous version. We will keep you updated on the resolution.",
+    "escalation_criteria": "If the issue persists after rollback or if the rollback procedure makes the situation worse, escalate to senior management and cross-functional teams.",
+    "rollback_procedure": "Exact steps to rollback if response makes situation worse: \n1. Identify the previous deployment version in Git repository\n2. Use GitOps tool to apply the previous version\n3. Monitor the rollback process for any errors or issues",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Immediate action required after resolution before closing incident: \n1. Document the root cause and impact of the issue\n2. Update the deployment process to prevent similar incidents in the future\n3. Notify all stakeholders about the resolution and next steps"
+  },
+  {
+    "playbook_id": "FTF-PB-067",
+    "title": "Payment service high error rate response",
+    "category": "application",
+    "severity": "P2",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1: Check PagerDuty alert or Grafana dashboard for error rate",
+          "action 2: Review application logs for recent changes or errors"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Temporarily disable non-critical features to isolate issue",
+          "containment action 2: Increase resource allocation to payment-service"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1: Apply patch or fix identified in logs",
+          "action 2: Perform rolling restart of payment-service pods"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Monitor Grafana dashboard for error rate reduction",
+          "confirmation metric to check: Payment service error rate below 1%"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we are currently addressing a high error rate in the payment service. We will keep you updated on the progress.",
+    "escalation_criteria": "specific condition requiring escalation beyond payments-sre: If error rate persists for more than 30 minutes without improvement",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert to previous version of payment-service code",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Review incident logs and update service documentation"
+  },
+  {
+    "playbook_id": "FTF-PB-068",
+    "title": "Notification service backlog response",
+    "category": "application",
+    "severity": "P2",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1: Check PagerDuty alert for notification service backlog",
+          "action 2: Verify alert in Grafana dashboard for increased latency or failed requests"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Temporarily disable non-critical notifications to reduce load",
+          "containment action 2: Route traffic away from overloaded notification service to other services if possible"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1: Scale up notification service using Kubernetes",
+          "action 2: Restart or redeploy notification service to clear any build-up issues"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Monitor notification service performance using Prometheus and Grafana",
+          "confirmation metric to check: Check if backlog has cleared and notifications are being processed normally"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we are currently addressing a backlog in the notification service. We are working to ensure minimal disruption. For updates, please follow our status page.",
+    "escalation_criteria": "If notification service remains unresponsive for more than 30 minutes or if the backlog continues to grow, escalate to senior management and cross-functional teams.",
+    "rollback_procedure": "Roll back to previous version of notification service if the current resolution makes the situation worse. Use the backup version in Vault.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Perform post-mortem analysis to understand root cause, implement improvements, and update monitoring and alerting strategies."
+  },
+  {
+    "playbook_id": "FTF-PB-069",
+    "title": "Merchant API rate limiting incident",
+    "category": "application",
+    "severity": "P2",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "Check PagerDuty alert for more details",
+          "Review Grafana metrics for rate limiting thresholds"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "Increase rate limit temporarily to prevent further issues",
+          "Log into monitoring tools to monitor affected services"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "Identify root cause of the rate limiting",
+          "Adjust rate limiting configurations as needed"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "Confirm that the issue is resolved",
+          "Check merchant API performance metrics"
+        ]
+      }
+    ],
+    "communication_template": "Dear merchants, we have detected an issue with the rate limiting of our Merchant API. We are working to resolve it and will keep you updated.",
+    "escalation_criteria": "If the issue persists for more than 1 hour or affects critical services, escalate to senior management",
+    "rollback_procedure": "If the response makes the situation worse, revert to the previous configuration settings and review the changes made",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Perform a post-mortem analysis to document the incident, identify lessons learned, and update relevant documentation"
+  },
+  {
+    "playbook_id": "FTF-PB-070",
+    "title": "Fraud model false positive surge response",
+    "category": "application",
+    "severity": "P2",
+    "team": "payments-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-071",
+    "title": "Payment service thread pool exhaustion",
+    "category": "application",
+    "severity": "P1",
+    "team": "payments-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-072",
+    "title": "Database migration failure recovery",
+    "category": "application",
+    "severity": "P1",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Grafana dashboards for database migration status and identify failed services",
+          "action 2: Review logs in ELK stack for error messages related to database migration"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Isolate affected services to prevent further issues",
+          "containment action 2: Temporarily revert to previous database version if possible"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Rollback database migration using backup",
+          "action 2: Re-run successful database migration or manually correct issues"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Validate database consistency and integrity",
+          "confirmation metric to check: Monitor transaction success rate and service availability"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected a database migration failure. Immediate actions are being taken to restore service. Thank you for your patience.",
+    "escalation_criteria": "specific condition requiring escalation beyond payments-sre: If the issue persists after rollback and manual correction, escalate to senior management",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert to the previous state before the failed migration and notify stakeholders of the rollback",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Document the incident, update the database migration procedure, and conduct a post-mortem review"
+  },
+  {
+    "playbook_id": "FTF-PB-073",
+    "title": "Feature flag rollout regression response",
+    "category": "application",
+    "severity": "P2",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "Check PagerDuty for alert details",
+          "Review Grafana metrics for abnormal trends"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "Rollback feature flag to previous version",
+          "Isolate affected services"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "Debug and identify root cause",
+          "Apply necessary fixes or patches"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "Re-enable services after fixes",
+          "Monitor system for further issues"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have identified a regression issue following the feature flag rollout. We are taking immediate steps to contain and resolve the issue. We will keep you updated on the progress.",
+    "escalation_criteria": "If the issue persists beyond 30 minutes or affects more than 10% of transactions, escalation to senior management is required.",
+    "rollback_procedure": "Identify the specific feature flag version causing issues, revert to the previous stable version using the deployment tool, and ensure all services are brought back to a healthy state.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Conduct a post-mortem analysis to document the incident, identify lessons learned, and update the feature flag deployment process to prevent future issues."
+  },
+  {
+    "playbook_id": "FTF-PB-074",
+    "title": "Dead letter queue overflow response",
+    "category": "application",
+    "severity": "P2",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Grafana dashboard for DLQ metrics",
+          "action 2: Review PagerDuty alert for DLQ overflow"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Pause affected services if necessary to prevent further messages",
+          "containment action 2: Isolate the DLQ to prevent overflow from affecting other services"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Drain and process messages in the DLQ",
+          "action 2: Investigate root cause of DLQ overflow and apply fixes"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Monitor DLQ metrics to ensure they are back to normal",
+          "confirmation metric to check: Verify no new overflow alerts are triggered"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected a DLQ overflow issue and are taking immediate actions to resolve it. We will keep you updated on the progress.",
+    "escalation_criteria": "specific condition requiring escalation beyond payments-sre: If the issue persists and affects multiple services beyond the DLQ",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert service pauses and isolate actions if the issue is not resolved",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Conduct a post-mortem to identify and mitigate the root cause of the DLQ overflow"
+  },
+  {
+    "playbook_id": "FTF-PB-075",
+    "title": "Order service crash loop response",
+    "category": "application",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1: Check PagerDuty alert for specific alert ID and service name",
+          "action 2: Verify Grafana dashboard to confirm alert"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Deploy a canary release of the order service to isolated environment",
+          "containment action 2: Rollback to last known good deployment version"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1: Apply patch or fix identified in the crash loop",
+          "action 2: Deploy fix to production environment"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Monitor order service for stability",
+          "confirmation metric to check: Check order service health and transaction processing metrics in Grafana"
+        ]
+      }
+    ],
+    "communication_template": "Order service is experiencing a crash loop. We are investigating and will update you shortly.",
+    "escalation_criteria": "If the issue persists for more than 30 minutes or impacts more than 10% of daily transactions",
+    "rollback_procedure": "If the response makes the situation worse, roll back to the previous deployment version and redeploy the last known good version.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Perform root cause analysis and document findings. Schedule a meeting with development team to discuss and implement preventive measures."
+  },
+  {
+    "playbook_id": "FTF-PB-076",
+    "title": "HashiCorp Vault seal emergency response",
+    "category": "security",
+    "severity": "P1",
+    "team": "security-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1: Review PagerDuty alert for specific Vault seal event",
+          "action 2: Check Vault API logs for recent seal events"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Isolate affected services by updating Kubernetes service annotations",
+          "containment action 2: Temporarily disable access to Vault through Vault API"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1: Identify and address the root cause of the seal event (e.g., fix configuration, update software)",
+          "resolution action 2: Re-enable Vault access and services"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm Vault is no longer sealed",
+          "confirmation metric to check: Vault status API call"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected and are resolving an issue with Vault sealing. We will keep you updated on the progress.",
+    "escalation_criteria": "If Vault remains sealed beyond 30 minutes or if the root cause is not immediately apparent",
+    "rollback_procedure": "If the resolution makes the situation worse, revert to the previous state by restoring the last known good configuration via Vault backup and restore procedures",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Immediate action required after resolution before closing incident: Perform a thorough review of Vault logs, update monitoring, and ensure all services are functioning as expected"
+  },
+  {
+    "playbook_id": "FTF-PB-077",
+    "title": "SSL certificate expired emergency response",
+    "category": "security",
+    "severity": "P1",
+    "team": "security-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check PagerDuty for specific SSL certificate expiration alert",
+          "action 2: Verify Grafana dashboard for certificate expiration metrics"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Update SSL certificates for affected services",
+          "containment action 2: Notify security team and relevant stakeholders"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Execute certificate renewal script for payment-service, order-service, transaction-processor, fraud-detection-service, notification-service, merchant-api",
+          "action 2: Test renewed certificates using openssl"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm successful renewal in Grafana dashboard",
+          "confirmation metric to check: Validate SSL certificate status in Prometheus metrics"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have identified an SSL certificate expiration issue. Immediate action is being taken to resolve this. Further updates will follow. Thanks for your understanding.",
+    "escalation_criteria": "specific condition requiring escalation beyond security-sre: If the issue cannot be resolved within 30 minutes or if there are cascading service disruptions",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Rollback to previous working certificates using backup copies",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Conduct a post-mortem review and update SSL certificate management procedures"
+  },
+  {
+    "playbook_id": "FTF-PB-078",
+    "title": "AWS WAF blocking payments response",
+    "category": "security",
+    "severity": "P1",
+    "team": "security-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "Review PagerDuty alert for details",
+          "Check Grafana dashboard for relevant metrics"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "Identify and isolate affected services",
+          "Temporarily disable AWS WAF rules causing issues"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "Reconfigure AWS WAF rules to prevent false positives",
+          "Perform manual testing to ensure resolution"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "Monitor system for any further issues",
+          "Confirm payment processing is back to normal"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have identified an issue with AWS WAF temporarily blocking payment transactions. We are actively working to resolve this and will update you shortly. Thank you for your patience.",
+    "escalation_criteria": "If the issue persists for more than 30 minutes or affects more than 10% of daily transactions",
+    "rollback_procedure": "Revert to previous AWS WAF configuration settings if the current resolution makes the situation worse",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Perform a root cause analysis and update the AWS WAF rules to prevent future occurrences"
+  },
+  {
+    "playbook_id": "FTF-PB-079",
+    "title": "Security breach response procedure",
+    "category": "security",
+    "severity": "P1",
+    "team": "security-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Run incident detection playbook on Vault for unauthorized access",
+          "action 2: Check Kafka for any suspicious activity"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Isolate affected services using EKS",
+          "containment action 2: Temporarily disable merchant-api access"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Execute rollback scripts from backup",
+          "action 2: Re-enable affected services after verification"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm no further breach activity using Prometheus and Grafana",
+          "confirmation metric to check: Check transaction logs for any unauthorized transactions"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected a potential security breach. Immediate actions are being taken. We will keep you updated.",
+    "escalation_criteria": "specific condition requiring escalation beyond security-sre: If breach affects more than 10% of daily transactions",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Execute rollback playbook from FTF-RB-XX to revert to last known good state",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Conduct a post-incident review and update security policies"
+  },
+  {
+    "playbook_id": "FTF-PB-080",
+    "title": "mTLS failure response",
+    "category": "security",
+    "severity": "P1",
+    "team": "security-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check PagerDuty for specific mTLS alert and confirm the issue",
+          "action 2: Verify the Grafana dashboard for any related metrics showing anomalies"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Isolate affected services by disabling mTLS for specific services to prevent further spread",
+          "containment action 2: Update firewall rules to block traffic to/from affected services"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Reconfigure mTLS certificates and keys for affected services",
+          "action 2: Restart affected services to apply new configurations"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm mTLS is functioning correctly by checking service logs",
+          "confirmation metric to check: Monitor service health and mTLS metrics on Grafana"
+        ]
+      }
+    ],
+    "communication_template": "MTLS failure detected. We are actively working to resolve the issue and ensure minimal impact.",
+    "escalation_criteria": "specific condition requiring escalation beyond security-sre: If the issue persists for more than 30 minutes or impacts critical services",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Rollback to previous working state by reverting certificates and configurations",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Conduct a post-mortem to identify root cause and update security policies"
+  },
+  {
+    "playbook_id": "FTF-PB-081",
+    "title": "API key compromise response",
+    "category": "security",
+    "severity": "P1",
+    "team": "security-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-082",
+    "title": "AWS IAM lockout response",
+    "category": "security",
+    "severity": "P2",
+    "team": "security-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-083",
+    "title": "Vault token expiry storm response",
+    "category": "security",
+    "severity": "P2",
+    "team": "security-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Run `vault token lookup` to identify expired tokens",
+          "action 2: Review logs in Vault for token expiry events"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Invalidate and regenerate tokens for affected services",
+          "containment action 2: Notify services teams to update their tokens"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Use Vault CLI to regenerate and distribute new tokens",
+          "action 2: Update Vault policies and configurations if necessary"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm all services are using valid tokens",
+          "confirmation metric to check: Monitor Vault token status via API"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have identified and are resolving a Vault token expiry storm. We will keep you updated.",
+    "escalation_criteria": "specific condition requiring escalation beyond security-sre: If the issue persists and affects more than 10% of services for over 30 minutes",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert to previous working state by restoring tokens and configurations from backup",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Conduct a post-mortem analysis, document findings, and update relevant documentation and procedures"
+  },
+  {
+    "playbook_id": "FTF-PB-084",
+    "title": "AWS KMS key issue response",
+    "category": "security",
+    "severity": "P1",
+    "team": "security-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "Check PagerDuty alert for specific KMS key issue",
+          "Review Grafana metrics for any anomalies related to KMS key usage"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "Isolate affected services by removing access to the compromised KMS key",
+          "Temporarily disable or replace the compromised KMS key"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "Re-enable access to the KMS key with updated security measures",
+          "Update service configurations to use the new or updated KMS key"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "Verify that services are functioning as expected",
+          "Check that the new KMS key is being used correctly"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have detected an issue with our AWS KMS key and are actively working to resolve it. We will keep you updated.",
+    "escalation_criteria": "If the issue persists for more than 30 minutes or affects multiple critical services, escalate to the executive team.",
+    "rollback_procedure": "If the response makes the situation worse, revert to the previous KMS key and restore service configurations as they were prior to the incident.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Perform a post-mortem analysis to identify the root cause and improve security measures. Update incident response procedures as necessary."
+  },
+  {
+    "playbook_id": "FTF-PB-085",
+    "title": "Cloudflare firewall blocking response",
+    "category": "security",
+    "severity": "P1",
+    "team": "security-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check PagerDuty for specific alert",
+          "action 2: Verify Grafana dashboard for relevant threshold breach"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Isolate affected services by stopping traffic",
+          "containment action 2: Temporarily disable non-essential services"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Review Cloudflare logs for blocking events",
+          "action 2: Update firewall rules to allow necessary traffic"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm Cloudflare rules have been updated",
+          "confirmation metric to check: Monitor service health and transaction volume"
+        ]
+      }
+    ],
+    "communication_template": "Alert: Cloudflare firewall is blocking traffic to our services. We are actively resolving the issue and will keep you updated.",
+    "escalation_criteria": "specific condition requiring escalation beyond security-sre: If the issue persists for more than 30 minutes or affects critical services",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert Cloudflare rules to previous state and restore affected services",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Conduct a post-mortem review to identify root cause and prevent future incidents"
+  },
+  {
+    "playbook_id": "FTF-PB-086",
+    "title": "EKS cluster outage response",
+    "category": "kubernetes",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "Check PagerDuty alert for details",
+          "Run `kubectl get nodes` to verify node status"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "Restart EKS cluster nodes using AWS console or CLI",
+          "Deploy a minimal test pod to verify network connectivity"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "Review AWS CloudWatch logs for error messages",
+          "Use `kubectl describe node <node-name>` to diagnose node issues"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "Run `kubectl get pods --all-namespaces` to ensure all pods are running",
+          "Check application health using Grafana dashboards"
+        ]
+      }
+    ],
+    "communication_template": "We are currently experiencing issues with our EKS cluster. Our team is actively working on resolving the issue. We will provide updates as soon as we have more information.",
+    "escalation_criteria": "If the issue persists for more than 30 minutes without a resolution, escalate to the senior management team.",
+    "rollback_procedure": "If the initial response makes the situation worse, revert to the previous stable state using the latest backup.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Perform a post-mortem analysis to identify the root cause and prevent similar incidents in the future."
+  },
+  {
+    "playbook_id": "FTF-PB-087",
+    "title": "Payment service pod failure response",
+    "category": "kubernetes",
+    "severity": "P1",
+    "team": "payments-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Kubernetes dashboard for pod status and logs",
+          "action 2: Verify alert details in PagerDuty"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Drain and shutdown problematic pod",
+          "containment action 2: Deploy a new pod with updated image"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Apply updated deployment configuration",
+          "action 2: Monitor Kubernetes logs for stability"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm service is back to normal using service health checks",
+          "confirmation metric to check: Verify transaction volume and success rate"
+        ]
+      }
+    ],
+    "communication_template": "Short template message to send to merchants/stakeholders: Payment processing issues have been identified and are being addressed. We are working to resolve the issue as soon as possible.",
+    "escalation_criteria": "specific condition requiring escalation beyond payments-sre: If service is down for more than 30 minutes, escalate to senior management.",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert to the previous deployment version and monitor the service for stability.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Document the root cause, impact, and resolution steps in the incident report."
+  },
+  {
+    "playbook_id": "FTF-PB-088",
+    "title": "EKS node failure response",
+    "category": "kubernetes",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "kubectl get nodes to identify failed nodes",
+          "check Grafana metrics for node status"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "reboot the failed node if it's a transient issue",
+          "scale up the affected services to maintain availability"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "replace the failed node with a new one",
+          "redeploy affected services to the new node"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "validate node status and service health",
+          "run load tests to ensure stability"
+        ]
+      }
+    ],
+    "communication_template": "We have detected a failure in an EKS node. We are currently working to resolve the issue and maintain service availability. We will keep you updated.",
+    "escalation_criteria": "If the issue persists for more than 30 minutes or affects multiple nodes, escalate to senior management.",
+    "rollback_procedure": "If the response makes the situation worse, revert to the previous stable state by rolling back the failed node deployment and services.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Immediate action required to document the incident, update monitoring, and review the cause of the failure to prevent future occurrences."
+  },
+  {
+    "playbook_id": "FTF-PB-089",
+    "title": "ArgoCD deployment failure response",
+    "category": "kubernetes",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "Check ArgoCD dashboard for failed deployments",
+          "Review Kubernetes cluster logs for errors"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "Rollback to the last successful deployment",
+          "Isolate affected services from the rest of the cluster"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "Debug and fix the failed deployment",
+          "Re-deploy the service using ArgoCD"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "Confirm service is back online",
+          "Check service health using Prometheus and Grafana"
+        ]
+      }
+    ],
+    "communication_template": "Alert: ArgoCD deployment failure detected. We are investigating and will update you shortly.",
+    "escalation_criteria": "If the issue persists for more than 30 minutes or affects multiple critical services",
+    "rollback_procedure": "If the re-deployment makes the situation worse, roll back to the previous successful state using ArgoCD rollback command",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Perform a root cause analysis, update monitoring and alerting, and document the findings for future reference"
+  },
+  {
+    "playbook_id": "FTF-PB-090",
+    "title": "Ingress controller failure response",
+    "category": "kubernetes",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Grafana dashboard for ingress controller health",
+          "action 2: Review logs in Elasticsearch or Kibana for recent errors"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Roll back to the previous known good state using kubectl",
+          "containment action 2: Disable traffic routing to the faulty ingress controller"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Apply the latest stable config to the ingress controller",
+          "action 2: Perform a rolling update to ensure all replicas are in a healthy state"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm ingress controller is up and running",
+          "confirmation metric to check: Validate that all services are accessible via the new ingress"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we are currently addressing an issue with our ingress controller. We are working to restore service availability. Thank you for your patience.",
+    "escalation_criteria": "specific condition requiring escalation beyond platform-sre: If the issue persists for more than 30 minutes or if multiple services are affected",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert to the previous known good state using kubectl and check for any configuration drift",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Update the service status on the company website and notify stakeholders of the resolution"
+  },
+  {
+    "playbook_id": "FTF-PB-091",
+    "title": "etcd degradation response",
+    "category": "kubernetes",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: `kubectl get pods -n <namespace> | grep etcd` to check etcd pod status",
+          "action 2: `kubectl describe pod <etcd-pod-name> -n <namespace>` for more details"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: `kubectl scale statefulset <etcd-statefulset-name> -n <namespace> --replicas=0` to drain etcd",
+          "containment action 2: `etcdctl cluster-health` to check cluster health"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: `kubectl scale statefulset <etcd-statefulset-name> -n <namespace> --replicas=<original-replicas-count>` to restore etcd",
+          "action 2: `etcdctl cluster-health` to verify cluster health"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: `kubectl get pods -n <namespace>` to check etcd pod status",
+          "confirmation metric to check: `etcdctl cluster-health` to ensure all etcd members are healthy"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we are currently addressing an etcd degradation issue. We are working to restore service as soon as possible. Updates will be provided as they become available.",
+    "escalation_criteria": "specific condition requiring escalation beyond platform-sre: If etcd cluster remains unhealthy for more than 30 minutes or if critical services begin to fail due to etcd degradation",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: `kubectl scale statefulset <etcd-statefulset-name> -n <namespace> --replicas=<reduced-replicas-count>` to revert changes and `etcdctl cluster-health` to check cluster health",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Review incident logs, update monitoring and alerting, and document findings and improvements for future incidents"
+  },
+  {
+    "playbook_id": "FTF-PB-092",
+    "title": "HPA runaway scaling response",
+    "category": "kubernetes",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check Grafana dashboard for HPA metrics",
+          "action 2: Review Kubernetes logs for any errors or warnings"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Reduce HPA target to a safe level",
+          "containment action 2: Apply temporary limit to resource requests and limits"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Adjust HPA configuration to prevent runaway scaling",
+          "action 2: Monitor resource usage and HPA behavior"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm HPA has stabilized",
+          "confirmation metric to check: Verify resource utilization and HPA scaling behavior"
+        ]
+      }
+    ],
+    "communication_template": "Dear stakeholders, we have identified and are addressing an HPA runaway scaling issue. We will keep you updated on the resolution.",
+    "escalation_criteria": "specific condition requiring escalation beyond platform-sre: If the issue persists for more than 30 minutes or impacts critical services",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Revert HPA configuration to previous state and review for any misconfigurations",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Review and document the cause of the issue, update monitoring and alerting, and train relevant team members"
+  },
+  {
+    "playbook_id": "FTF-PB-093",
+    "title": "EKS autoscaler failure response",
+    "category": "kubernetes",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check EKS cluster metrics via Prometheus and Grafana",
+          "action 2: Review logs in CloudWatch for autoscaler failures"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Increase EKS node capacity temporarily to prevent service degradation",
+          "containment action 2: Disable autoscaling group if the issue is critical"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Investigate and address the root cause of the autoscaler failure using EKS dashboard and cluster logs",
+          "action 2: Re-enable autoscaling group after confirming stability"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Monitor cluster health and service availability",
+          "confirmation metric to check: Ensure all services are operating within expected performance thresholds"
+        ]
+      }
+    ],
+    "communication_template": "EKS autoscaler failure detected. Immediate actions are being taken to contain and resolve the issue. We will keep you updated.",
+    "escalation_criteria": "specific condition requiring escalation beyond platform-sre: If the issue persists for more than 30 minutes or impacts critical services",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: If the temporary increase in node capacity exacerbates the issue, revert to the previous configuration and perform a root cause analysis",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Document the incident, perform a post-mortem, and update monitoring and alerting rules to prevent future occurrences"
+  },
+  {
+    "playbook_id": "FTF-PB-094",
+    "title": "Network policy lockout response",
+    "category": "kubernetes",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-095",
+    "title": "Pod eviction storm response",
+    "category": "kubernetes",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-096",
+    "title": "Alert storm response procedure",
+    "category": "monitoring",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "PagerDuty alert fired",
+    "triage_steps": [
+      "Assess scope",
+      "Check dashboards",
+      "Determine severity"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 min",
+        "actions": [
+          "Check Grafana"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "5-30 min",
+        "actions": [
+          "Apply fix",
+          "Verify"
+        ]
+      }
+    ],
+    "escalation_criteria": "Escalate if not resolved in 30 mins",
+    "rollback_procedure": "Revert last change"
+  },
+  {
+    "playbook_id": "FTF-PB-097",
+    "title": "Monitoring stack outage response",
+    "category": "monitoring",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1 with tool and command: Check PagerDuty for specific alert and confirm the alert is related to monitoring stack",
+          "action 2: Verify Grafana dashboard for any critical thresholds exceeded"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Isolate affected services using Kubernetes namespace or pod labels",
+          "containment action 2: Deploy a rollback strategy using GitOps principles"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1 with exact command: Apply patches or updates to the affected services",
+          "action 2: Restart services or pods as needed"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm services are back to normal using Prometheus and Grafana",
+          "confirmation metric to check: Ensure all services are processing transactions at expected rates"
+        ]
+      }
+    ],
+    "communication_template": "Dear merchants, we have detected an issue with our monitoring stack. Our team is actively working to resolve it. We will keep you updated. Thank you for your patience.",
+    "escalation_criteria": "specific condition requiring escalation beyond platform-sre: If the issue persists for more than 30 minutes without resolution or if it impacts more than 50% of services",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Roll back to the previous stable state using the latest Git commit and redeploy the services",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Conduct a postmortem meeting to analyze the cause and propose preventive measures"
+  },
+  {
+    "playbook_id": "FTF-PB-098",
+    "title": "Prometheus scrape failure response",
+    "category": "monitoring",
+    "severity": "P2",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "Check PagerDuty alert for details",
+          "Review Grafana dashboard for related metrics"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "Restart Prometheus server or service",
+          "Check network connectivity to Prometheus targets"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "Review Prometheus configuration for errors",
+          "Restart affected services if necessary"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "Confirm Prometheus scrape is successful",
+          "Check service metrics are back to normal"
+        ]
+      }
+    ],
+    "communication_template": "Prometheus scrape failure detected. Investigating and taking steps to resolve.",
+    "escalation_criteria": "If Prometheus scrape failure persists for more than 30 minutes",
+    "rollback_procedure": "If resolution steps make the situation worse, revert to previous stable configuration",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Perform post-mortem analysis, update monitoring thresholds, and document findings for future reference"
+  },
+  {
+    "playbook_id": "FTF-PB-099",
+    "title": "Alert Manager failure response",
+    "category": "monitoring",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "action 1: Check the Alert Manager status via Prometheus or Grafana",
+          "action 2: Review logs for any recent changes or issues related to Alert Manager"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "containment action 1: Temporarily disable new alerts via PagerDuty",
+          "containment action 2: Isolate Alert Manager from other services to prevent further impact"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "resolution action 1: Restart Alert Manager service using kubectl or EKS command",
+          "action 2: Verify Alert Manager is back online and alerts are being received"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "verification step 1: Confirm all services are functioning as expected",
+          "confirmation metric to check: Check alert volumes and ensure they are within normal thresholds"
+        ]
+      }
+    ],
+    "communication_template": "Short template message to send to merchants/stakeholders: 'Dear valued merchant, we are currently addressing an issue with our Alert Manager. Our team is working to resolve this as quickly as possible. We will provide updates as more information becomes available.'",
+    "escalation_criteria": "specific condition requiring escalation beyond platform-sre: If Alert Manager remains down for more than 30 minutes, escalate to senior management.",
+    "rollback_procedure": "exact steps to rollback if response makes situation worse: Roll back to the previous version of Alert Manager using the rollback procedure defined in FTF-RB-XX.",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "immediate action required after resolution before closing incident: Review incident logs and update monitoring and alerting policies to prevent future occurrences."
+  },
+  {
+    "playbook_id": "FTF-PB-100",
+    "title": "PagerDuty escalation failure response",
+    "category": "monitoring",
+    "severity": "P1",
+    "team": "platform-sre",
+    "trigger": "specific PagerDuty alert or Grafana threshold that triggers this playbook",
+    "triage_steps": [
+      "T+0: immediate action to assess scope",
+      "T+5: second assessment step",
+      "T+10: decision point with exact criteria"
+    ],
+    "response_phases": [
+      {
+        "phase": "Detect",
+        "duration": "0-5 minutes",
+        "actions": [
+          "Check PagerDuty for alert details",
+          "Review Grafana dashboards for relevant metrics"
+        ]
+      },
+      {
+        "phase": "Contain",
+        "duration": "5-15 minutes",
+        "actions": [
+          "Isolate affected services",
+          "Implement temporary workarounds"
+        ]
+      },
+      {
+        "phase": "Resolve",
+        "duration": "15-30 minutes",
+        "actions": [
+          "Apply permanent fixes",
+          "Update configuration settings"
+        ]
+      },
+      {
+        "phase": "Verify",
+        "duration": "30-45 minutes",
+        "actions": [
+          "Run tests to confirm resolution",
+          "Monitor system for any regressions"
+        ]
+      }
+    ],
+    "communication_template": "We are currently experiencing an issue with our payment processing system. Our team is actively working to resolve the problem and minimize any impact on your operations. We will provide updates as soon as we have more information.",
+    "escalation_criteria": "If the issue persists for more than 30 minutes without resolution or if it impacts more than 10% of total transactions",
+    "rollback_procedure": "Roll back to the previous version of the affected service or configuration if the current resolution makes the situation worse",
+    "related_runbook": "FTF-RB-XX",
+    "post_incident": "Perform a post-mortem analysis, document lessons learned, and update relevant infrastructure and documentation"
+  }
+]

@@ -1,0 +1,2015 @@
+[
+  {
+    "qa_id": "FTF-QA-001",
+    "question": "What are the first 5 steps when PagerDuty fires for payment-service?",
+    "category": "incident_response",
+    "answer": "The first step is to acknowledge the incident in PagerDuty and log into the Grafana dashboard to check the current state of the payment-service. Next, verify the status of the payment-service using the command `kubectl get pods -n payment-service`. If the service is down, check the logs with `kubectl logs <pod-name> -n payment-service`. The third step is to check the Prometheus metrics to identify if there are any unusual spikes or drops in the payment-service's performance. The fourth step involves escalating the issue to the on-call team if the service is not responding within 15 minutes. The fifth step is to initiate a rollback procedure if the issue is critical and the service cannot be brought back online within the P1 MTTR target.",
+    "key_commands": [
+      "kubectl get pods -n payment-service",
+      "kubectl logs <pod-name> -n payment-service"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the payment-service downtime exceeds 15 minutes or if the service shows critical degradation in performance as indicated by the Prometheus alerts."
+  },
+  {
+    "qa_id": "FTF-QA-002",
+    "question": "How do I declare a P1 major incident at FinTechFlow?",
+    "category": "incident_response",
+    "answer": "At FinTechFlow, a P1 major incident is declared when the payment-service falls below its 99.95% uptime SLO, or when any service impacts more than 10% of our B2B payment volume. This typically requires immediate attention from the on-call team and a swift resolution within the P1 MTTR target of 30 minutes. To declare a P1 incident, use the PagerDuty incident creation command: `pd-api incidents create --service payment-service --title 'P1 Incident: [Service Name]' --description 'Details of the incident and impact'`. Ensure to involve the incident response team and communicate the incident details to all relevant stakeholders.",
+    "key_commands": [
+      "pd-api incidents create --service payment-service --title 'P1 Incident: [Service Name]' --description 'Details of the incident and impact'"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "Payment-service uptime drops below 99.95% or impact on >10% of B2B payment volume"
+  },
+  {
+    "qa_id": "FTF-QA-003",
+    "question": "What is the incident severity classification at FinTechFlow?",
+    "category": "incident_response",
+    "answer": "At FinTechFlow, incident severity is classified based on the impact on business operations and user experience. A P1 incident is triggered when the payment-service, which has an SLO of 99.95% uptime, experiences downtime that exceeds the P1 MTTR target of 30 minutes. This typically involves significant financial or operational impact, such as a service outage affecting 50M transactions/day or more.",
+    "key_commands": [
+      "kubectl get pods -n fin\u0442\u0435\u0445flow | grep payment-service",
+      "kubectl top pod -n fin\u0442\u0435\u0445flow"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the payment-service experiences downtime and the MTTR exceeds 30 minutes, it is classified as a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-004",
+    "question": "How do I run an incident war room at FinTechFlow?",
+    "category": "incident_response",
+    "answer": "At FinTechFlow, an incident war room is initiated when the payment-service downtime exceeds 15 minutes. The team convenes in a dedicated Slack channel, #incident-response, to discuss and resolve the issue. Key services like payment-service, order-service, and transaction-processor are monitored using Prometheus and Grafana. The team uses the command `kubectl get pods -n <namespace>` to check the status of Kubernetes pods and `kubectl logs <pod-name> -n <namespace>` to review logs.",
+    "key_commands": [
+      "kubectl get pods -n <namespace>",
+      "kubectl logs <pod-name> -n <namespace>"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "Payment-service downtime exceeds 15 minutes"
+  },
+  {
+    "qa_id": "FTF-QA-005",
+    "question": "When should I escalate from P2 to P1?",
+    "category": "incident_response",
+    "answer": "At FinTechFlow, you should escalate from P2 to P1 if the payment-service experiences downtime exceeding 30 minutes, as this breaches our P1 MTTR target. Ensure to monitor the Prometheus alerts for service latency and error rates. If the issue persists, use the commands provided to gather more details and escalate.",
+    "key_commands": [
+      "kubectl get pods -n fin-tech-flow",
+      "kubectl describe pod <pod-name> -n fin-tech-flow"
+    ],
+    "related_runbook": "FTF-RB-003",
+    "escalation_threshold": "30 minutes of downtime for the payment-service"
+  },
+  {
+    "qa_id": "FTF-QA-006",
+    "question": "How do I communicate with merchants during a P1 outage?",
+    "category": "incident_response",
+    "answer": "During a P1 outage, immediately notify merchants via the incident response plan, including sending an initial email to the merchant support team and updating the merchant dashboard with the outage status. Use the PagerDuty incident page to coordinate with the SRE team and keep merchants informed with status updates.",
+    "key_commands": [
+      "pagerduty incidents create --summary 'P1 Outage - Payment Service' --service-id <service-id> --assign-to 'SRE Team'",
+      "merchant-dashboard update-status --status 'Outage - Payment Service'"
+    ],
+    "related_runbook": "FTF-RB-012",
+    "escalation_threshold": "When the payment-service downtime exceeds 30 minutes"
+  },
+  {
+    "qa_id": "FTF-QA-007",
+    "question": "What is the FinTechFlow incident response checklist?",
+    "category": "incident_response",
+    "answer": "The incident response checklist for FinTechFlow includes immediate actions such as checking the Prometheus and Grafana dashboards for anomalies, executing `kubectl get pods` and `kubectl describe pod <pod_name>` to inspect container statuses, and escalating to the SRE team if the payment-service uptime drops below 99.95%.",
+    "key_commands": [
+      "kubectl get pods",
+      "kubectl describe pod <pod_name>"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the payment-service uptime falls below 99.95% for more than 15 minutes"
+  },
+  {
+    "qa_id": "FTF-QA-008",
+    "question": "How do I assign roles during a major incident?",
+    "category": "incident_response",
+    "answer": "During a major incident, roles should be assigned based on predefined roles and responsibilities documented in the incident response plan. For example, the incident commander should be the primary point of contact and responsible for coordinating the incident response. The SRE team should focus on technical aspects, such as `kubectl get pods` and `kubectl describe pod <pod-name>` to check the status of Kubernetes services. The operations team will handle external communication and customer support. The escalation threshold for P1 incidents is when the incident affects more than 10% of the payment-service users for over 15 minutes.",
+    "key_commands": [
+      "kubectl get pods -n <namespace>",
+      "kubectl describe pod payment-service-<pod-name> -n <namespace>"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "when the incident affects more than 10% of the payment-service users for over 15 minutes"
+  },
+  {
+    "qa_id": "FTF-QA-009",
+    "question": "What metrics should I check first during a payment outage?",
+    "category": "incident_response",
+    "answer": "During a payment outage, start by checking the payment-service's Prometheus metrics, specifically the 'payment_service_request_duration_seconds' and 'payment_service_request_count' to identify if the service is receiving requests but experiencing delays or errors. Additionally, review the Kafka topic 'transaction-processor' to ensure there are no backlogs or dropped messages. If the issue persists, consult the ArgoCD application status to confirm that the payment-service is running on the correct Kubernetes pods.",
+    "key_commands": [
+      "curl http://prometheus-server:9090/graph#'payment_service_request_duration_seconds{payment_service=\"payment-service\"}'",
+      "kubectl get pods -n fintechflow | grep payment-service"
+    ],
+    "related_runbook": "FTF-RB-003",
+    "escalation_threshold": "If the payment-service's request duration exceeds 10 seconds for more than 5 minutes, or if the request count drops below 100 requests per minute for over 10 minutes, it should be escalated to P1."
+  },
+  {
+    "qa_id": "FTF-QA-010",
+    "question": "How do I determine blast radius of a payment incident?",
+    "category": "incident_response",
+    "answer": "To determine the blast radius of a payment incident, monitor the payment-service's health and related services. Use Prometheus queries to check the status of the payment-service and its dependencies like order-service and transaction-processor. Use Grafana dashboards to visualize the impact, and ArgoCD to check for any recent deployments that might have caused the issue. If the incident affects more than 30% of the daily transactions, it is escalated to a P1.",
+    "key_commands": [
+      "prometheus query: 'up{job=\"payment-service\"}' to check service health",
+      "grafana dashboard: Payment Incident Impact to visualize affected services"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the payment-service downtime exceeds 30% of the daily transactions (15 million transactions) or affects over 10% of the daily volume ($200M)"
+  },
+  {
+    "qa_id": "FTF-QA-011",
+    "question": "What is the SLO for payment-service at FinTechFlow?",
+    "category": "incident_response",
+    "answer": "The SLO for the payment-service at FinTechFlow is 99.95% uptime. This is a critical SLO, and the primary goal is to maintain this level of service. Prometheus and Grafana are used to monitor the service health, and alerts are configured to trigger when the uptime drops below 99.95%. PagerDuty is responsible for alerting the on-call team, and the P1 MTTR target is 30 minutes.",
+    "key_commands": [
+      "prometheus query: `up{job=\"payment-service\"} == 0`",
+      "grafana dashboard id: 12345 (Payment Service Uptime)"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the payment-service uptime falls below 99.0% for more than 15 minutes, it is escalated to P1."
+  },
+  {
+    "qa_id": "FTF-QA-012",
+    "question": "How do I calculate MTTR for our payment incidents?",
+    "category": "incident_response",
+    "answer": "To calculate the Mean Time to Repair (MTTR) for payment incidents, first gather the timestamps of when each incident started and when it was fully resolved. Use Prometheus queries to identify downtime in the payment-service. For example, `avg without (job) (rate(http_request_duration_seconds_count{job=\"payment-service\"}[5m])) < 0.9995` will help identify periods when the service was not meeting its 99.95% uptime SLO. Sum the durations of these incidents and divide by the number of incidents to find the average resolution time. For instance, `sum over time(up{job=\"payment-service\"}[1d])` can provide the total downtime. P1 incidents, which are critical to business operations, are escalated immediately.",
+    "key_commands": [
+      "prometheus query: `avg without (job) (rate(http_request_duration_seconds_count{job=\"payment-service\"}[5m])) < 0.9995`",
+      "prometheus query: `sum over time(up{job=\"payment-service\"}[1d])`"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the payment-service downtime exceeds 15 minutes, it is escalated to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-013",
+    "question": "When should I page the on-call database engineer?",
+    "category": "incident_response",
+    "answer": "You should page the on-call database engineer when you observe a critical alert from Prometheus indicating a high load or connection issues on the PostgreSQL service. Ensure to check the health of the database using the exact command `pg_isolation_level` and monitor the Redis cache with `redis-cli info` to see if there are any bottlenecks. If the issue persists, it's a P1 and should be escalated immediately.",
+    "key_commands": [
+      "pg_isolation_level -c payment-service",
+      "redis-cli info"
+    ],
+    "related_runbook": "FTF-RB-002",
+    "escalation_threshold": "95% CPU usage on PostgreSQL or 90% memory usage for 5 consecutive minutes"
+  },
+  {
+    "qa_id": "FTF-QA-014",
+    "question": "How do I write a preliminary incident update for merchants?",
+    "category": "incident_response",
+    "answer": "At FinTechFlow, we are currently experiencing an issue with our payment-service. Our monitoring systems have detected a drop in availability, and our incident response team is actively working to resolve this. We aim to have the issue resolved within 30 minutes, in line with our P1 MTTR target.",
+    "key_commands": [
+      "kubectl get pods -n payment-ns",
+      "kubectl describe pod <pod-name> -n payment-ns"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the issue persists beyond 30 minutes, it will be escalated to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-015",
+    "question": "What is the escalation path for P1 security incidents?",
+    "category": "incident_response",
+    "answer": "At FinTechFlow, a P1 security incident is escalated immediately to the on-call SRE team, security team, and CTO. The incident is documented in PagerDuty, and critical services such as payment-service are monitored with Prometheus and Grafana. The team will execute the incident response plan, which includes running exact command 1 with flags to check the security logs and exact command 2 to isolate the affected service.",
+    "key_commands": [
+      "kubectl get pods -n fin-tech-flow-ns",
+      "journalctl -u security-logs.service -f"
+    ],
+    "related_runbook": "FTF-RB-007",
+    "escalation_threshold": "A P1 security incident is defined at FinTechFlow as any incident that compromises the confidentiality, integrity, or availability of sensitive financial data or causes a service outage affecting more than 100,000 users."
+  },
+  {
+    "qa_id": "FTF-QA-016",
+    "question": "How do I handle a simultaneous P1 and P2 incident?",
+    "category": "incident_response",
+    "answer": "During a simultaneous P1 and P2 incident, prioritize the P1 issue, as it impacts the SLO for the payment-service. Follow the incident response playbook to escalate the P1 incident immediately. Monitor the P2 incident closely but defer detailed troubleshooting until the P1 is resolved.",
+    "key_commands": [
+      "kubectl describe pod <payment-service-pod-name> -n <namespace> --no-headers | grep 'Phase' -A 2",
+      "kubectl get pod <payment-service-pod-name> -n <namespace> -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "A P1 incident is triggered when the payment-service downtime exceeds 15 minutes or when there is a risk of violating the 99.95% uptime SLA."
+  },
+  {
+    "qa_id": "FTF-QA-017",
+    "question": "What Grafana dashboards should I open first during an incident?",
+    "category": "incident_response",
+    "answer": "First, open the `payment-service` dashboard to check the request and error rates, as well as the latency. Next, review the `Kafka` dashboard to ensure there are no backlogs or message delivery issues. Additionally, monitor the `PostgreSQL` and `Redis` dashboards for any database or cache performance anomalies. Ensure you also check the `Prometheus` dashboard for any critical alerts that might indicate a root cause.",
+    "key_commands": [
+      "grafana-cli dashboards load payment-service",
+      "grafana-cli dashboards load kafka",
+      "grafana-cli dashboards load postgresql",
+      "grafana-cli dashboards load redis",
+      "grafana-cli dashboards load prometheus"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the payment-service downtime exceeds 5 minutes or if the incident is affecting more than 10% of the daily transactions, it should be escalated to a P1 priority."
+  },
+  {
+    "qa_id": "FTF-QA-018",
+    "question": "How long before I must send a merchant-facing update?",
+    "category": "incident_response",
+    "answer": "You must send a merchant-facing update within 30 minutes of identifying a critical issue that impacts payment processing. Monitor the payment-service's SLO using Prometheus and Grafana. If the payment-service's uptime drops below 99.95%, immediately notify the incident response team and start the update process.",
+    "key_commands": [
+      "kubectl get pods -n payment-namespace",
+      "kubectl logs <payment-service-pod> -n payment-namespace"
+    ],
+    "related_runbook": "FTF-RB-002",
+    "escalation_threshold": "If the payment-service's uptime falls below 99.95% for more than 15 minutes, it will be escalated to P1 status."
+  },
+  {
+    "qa_id": "FTF-QA-019",
+    "question": "When is it safe to close a P1 incident?",
+    "category": "incident_response",
+    "answer": "A P1 incident can be closed when the payment-service has been restored to normal operation, all critical issues have been resolved, and the service is performing within its SLO of 99.95% uptime. This is typically verified by monitoring the service health with Prometheus and Grafana, ensuring no further degradation is observed, and the MTTR target of 30 minutes has been met. All affected services should be back to normal, and the PagerDuty incident should be marked as resolved.",
+    "key_commands": [
+      "kubectl get pods -n <namespace> -l app=payment-service",
+      "promtail - Grafana dashboard checks for payment-service"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "The incident is escalated to P1 when the payment-service experiences more than 15 minutes of downtime and affects 1% of the daily transactions."
+  },
+  {
+    "qa_id": "FTF-QA-020",
+    "question": "How do I hand off an ongoing incident at shift change?",
+    "category": "incident_response",
+    "answer": "At shift change, ensure the incoming team has all necessary context on the ongoing incident, including current status, steps taken, and expected next steps. Use the PagerDuty on-call rotation to notify the incoming team, and provide them with the necessary commands to continue troubleshooting or resolving the incident. Ensure the service is being monitored by Prometheus and Grafana, and the PagerDuty incident is updated with the handoff details.",
+    "key_commands": [
+      "pagerduty incidents update <incident_key> --status 'handoff requested'",
+      "prometheus alerts query <service_name> <alert_rule>"
+    ],
+    "related_runbook": "FTF-RB-015",
+    "escalation_threshold": "Incident is affecting more than 10% of the transaction volume or impacting over 50,000 users"
+  },
+  {
+    "qa_id": "FTF-QA-021",
+    "question": "What PagerDuty runbook should I follow for payment-service?",
+    "category": "incident_response",
+    "answer": "For the payment-service at FinTechFlow, you should follow the 'Payment Service Incident Response' runbook. This runbook details the steps for identifying and resolving issues, including checking Kubernetes pod logs and restarting services if necessary. Ensure that the Prometheus alerts trigger and Grafana dashboards are monitored for any anomalies.",
+    "key_commands": [
+      "kubectl get pods -n payment-namespace",
+      "kubectl logs <pod-name> -n payment-namespace"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the payment-service downtime exceeds 1 hour, it will be escalated to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-022",
+    "question": "How do I silence a PagerDuty alert storm safely?",
+    "category": "incident_response",
+    "answer": "To silence a PagerDuty alert storm safely, first, identify the root cause by checking the alert details and logs. Then, use the PagerDuty API to mute the alert for a specific time or permanently. Ensure that the change is logged and communicated to the relevant teams. For example, use `pd-cli alert-mute` or the PagerDuty API to silence the alert, and update the incident documentation with the action taken.",
+    "key_commands": [
+      "pd-cli alert-mute --alert-id=<alert-id> --duration=PT1H",
+      "curl -X POST https://api.pagerduty.com/alerts/mute -H 'Content-Type: application/json' -H 'Authorization: Token token=<api-token>' --data '{\"alert_id\":\"<alert-id>\",\"duration\":\"PT1H\"}'"
+    ],
+    "related_runbook": "FTF-RB-015",
+    "escalation_threshold": "If the alert storm persists for more than 1 hour or affects multiple critical services, it should be escalated to P1."
+  },
+  {
+    "qa_id": "FTF-QA-023",
+    "question": "What is the FinTechFlow war room bridge number?",
+    "category": "incident_response",
+    "answer": "The FinTechFlow war room bridge number is 8765. In case of an incident, dial this number to join the war room. The war room will be activated when the payment-service exceeds its 99.95% uptime SLO or when any P1 incident is declared.",
+    "key_commands": [
+      "/join-war-room 8765",
+      "kubectl get pods -n finTechFlow"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "Payment-service downtime exceeds 15 minutes or any other critical service downtime exceeds 30 minutes"
+  },
+  {
+    "qa_id": "FTF-QA-024",
+    "question": "How do I coordinate with the security team during an incident?",
+    "category": "incident_response",
+    "answer": "During an incident, immediately notify the security team via the incident response channel. Ensure to provide detailed information on the incident, including any potential security breaches. The security team will assess the situation and may request specific services such as the payment-service or transaction-processor logs. Follow their guidance on incident containment and remediation.",
+    "key_commands": [
+      "kubectl logs -n <namespace> <service-name> -c <container-name> -f",
+      "aws s3 cp s3://<bucket-name>/security-logs/ /local/path/ --recursive"
+    ],
+    "related_runbook": "FTF-RB-012",
+    "escalation_threshold": "If the incident affects more than 10% of daily transactions or involves sensitive customer data, it is escalated to P1."
+  },
+  {
+    "qa_id": "FTF-QA-025",
+    "question": "What is the rollback procedure for a bad payment-service deployment?",
+    "category": "incident_response",
+    "answer": "To rollback a bad payment-service deployment, first, ensure the current deployment is marked as failed in the CI/CD pipeline. Then, use ArgoCD to trigger a rollback to the previous known good state. Monitor the payment-service closely to ensure the rollback was successful and the SLO is maintained.",
+    "key_commands": [
+      "kubectl argocd app rollout undo payment-service --revision=previous-good-state",
+      "kubectl get pods -l app=payment-service -n fin techflow"
+    ],
+    "related_runbook": "FTF-RB-010",
+    "escalation_threshold": "If the rollback procedure fails to restore 99.95% uptime within 30 minutes, it escalates to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-026",
+    "question": "How do I assess if an incident requires executive notification?",
+    "category": "incident_response",
+    "answer": "An incident requires executive notification if the payment-service, which is critical for our 99.95% uptime SLO, experiences downtime or degradation that exceeds 15 minutes. This can be assessed by monitoring the Prometheus metrics and Grafana dashboards, specifically the payment-service downtime and latency. If the issue escalates beyond 15 minutes, the PagerDuty incident will be escalated to the SRE team lead and then to the executive team.",
+    "key_commands": [
+      "curl -s https://grafana.<domain>/d/<dashboard-id>/payment-service | grep 'downtime' | awk '{print $3}' | cut -d ',' -f 1",
+      "curl -s https://prometheus.<domain>/api/v1/query?query=payment_service_latency{job=\"payment-service\"} | jq '.data.result[0].value[1]'"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "15 minutes of downtime or latency exceeding 1000ms for payment-service"
+  },
+  {
+    "qa_id": "FTF-QA-027",
+    "question": "What tools do I use to correlate logs during an incident?",
+    "category": "incident_response",
+    "answer": "During an incident, we use tools like Prometheus and Grafana to correlate logs and metrics from our services. We specifically look at the `payment-service` logs using `promtail` and `grafana` dashboards, and correlate them with metrics from `Kafka` and `Redis` to identify the root cause. We also leverage `ArgoCD` and `GitHub Actions` to ensure that the configuration and codebase are in sync and not the cause of the issue.",
+    "key_commands": [
+      "promtail -tail-directory=/var/log -client-server=http://promtail-server:3100",
+      "grafana-cli import --file=/path/to/dashboard.json"
+    ],
+    "related_runbook": "FTF-RB-010",
+    "escalation_threshold": "If the incident is not resolved within 30 minutes, it escalates to a P1."
+  },
+  {
+    "qa_id": "FTF-QA-028",
+    "question": "How do I open a status page incident for FinTechFlow?",
+    "category": "incident_response",
+    "answer": "To open an incident for FinTechFlow's status page, navigate to the PagerDuty UI and select the 'Incidents' tab. Create a new incident by clicking the 'New Incident' button. Choose the 'Service' and 'Incident Type' that best fit the situation. For a payment-service downtime, ensure you select the 'P1 - Critical' severity. Provide a detailed description of the issue and include any relevant service names such as 'payment-service', 'transaction-processor', or 'Kafka' to aid in triage.",
+    "key_commands": [
+      "pd-client incident create --service-id <service-id> --incident-key <unique-key> --title 'Payment Service Downtime' --description 'Payment service is experiencing downtime. MTTR target is 30 minutes.' --severity P1 --escalation-policy-id <escalation-id>",
+      "pd-client incident update <incident-id> --status 'Acknowledged'"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "When the payment-service experiences more than 5 minutes of downtime and the 99.95% uptime SLA is breached, it escalates to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-029",
+    "question": "What is the standard incident timeline format at FinTechFlow?",
+    "category": "incident_response",
+    "answer": "At FinTechFlow, the standard incident timeline format includes key stages such as Incident Detection, Initial Response, Root Cause Analysis, Resolution, and Post-Mortem. Specific commands include `kubectl get pods -n <namespace>` and `kubectl logs <pod-name> -n <namespace>`. The payment-service must achieve 99.95% uptime, and a P1 incident is triggered when the MTTR exceeds 30 minutes.",
+    "key_commands": [
+      "kubectl get pods -n fin-tech-flow",
+      "kubectl logs payment-service-<pod-name> -n fin-tech-flow"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "MTTR exceeds 30 minutes"
+  },
+  {
+    "qa_id": "FTF-QA-030",
+    "question": "How do I preserve evidence during a security incident?",
+    "category": "incident_response",
+    "answer": "To preserve evidence during a security incident, immediately isolate affected services, such as the payment-service, to prevent further data tampering. Monitor and log all activities, including network traffic and system calls, using tools like Prometheus and Grafana. Ensure that the transaction-processor and fraud-detection-service are not affected by the incident, maintaining their availability for analysis. For specific commands, use `kubectl get pods -n namespace` to list pods and `journalctl -u <service-name> -f` to follow logs in real-time.",
+    "key_commands": [
+      "kubectl get pods -n fin-techflow",
+      "journalctl -u payment-service -f"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the incident affects more than 5% of daily transactions or results in financial loss exceeding $100K."
+  },
+  {
+    "qa_id": "FTF-QA-031",
+    "question": "How do I check PostgreSQL connection pool status at FinTechFlow?",
+    "category": "database",
+    "answer": "To check the PostgreSQL connection pool status at FinTechFlow, you can use the `pg_stat_activity` view and `pg_stat_database` view. These views provide detailed information about active connections and database statistics, respectively. Additionally, you can use the `pg_stat_statements` extension to monitor query execution and resource usage. Ensure that the connection pool size is within the SLO thresholds, which are set to 99.95% uptime for the payment-service.",
+    "key_commands": [
+      "psql -h <hostname> -U <username> -c \"SELECT * FROM pg_stat_activity;\"",
+      "psql -h <hostname> -U <username> -c \"SELECT * FROM pg_stat_database;\"",
+      "psql -h <hostname> -U <username> -c \"CREATE EXTENSION IF NOT EXISTS pg_stat_statements;\"",
+      "psql -h <hostname> -U <username> -c \"SELECT * FROM pg_stat_statements;\""
+    ],
+    "related_runbook": "FTF-RB-003",
+    "escalation_threshold": "If the number of active connections exceeds 90% of the connection pool size for more than 10 minutes, this is considered a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-032",
+    "question": "What command shows active connections in PostgreSQL?",
+    "category": "database",
+    "answer": "Refer to FinTechFlow database runbook.",
+    "key_commands": [],
+    "escalation_threshold": "P1 when service SLO breached"
+  },
+  {
+    "qa_id": "FTF-QA-033",
+    "question": "How do I safely kill idle PostgreSQL connections?",
+    "category": "database",
+    "answer": "To safely kill idle PostgreSQL connections, you can use the `pg_terminate_backend` function. For example, to kill a connection with PID 12345, use `SELECT pg_terminate_backend(12345);`. Set a threshold for idle connections, such as 30 minutes, in your database configuration. Monitor these using Prometheus and Grafana. If an issue arises, the `payment-service` should be escalated to P1 status.",
+    "key_commands": [
+      "SELECT pg_terminate_backend(12345);",
+      "SET statement_timeout = '30min';"
+    ],
+    "related_runbook": "FTF-RB-007",
+    "escalation_threshold": "If more than 10% of PostgreSQL connections are idle for over 30 minutes, this is escalated to P1."
+  },
+  {
+    "qa_id": "FTF-QA-034",
+    "question": "What is the max_connections limit for our PostgreSQL cluster?",
+    "category": "database",
+    "answer": "The max_connections limit for our PostgreSQL cluster can be checked using the command `SHOW max_connections;` in the PostgreSQL shell. For a high-transaction B2B payment processor like FinTechFlow, a typical value is around 2000 connections. However, this can be adjusted based on the load and specific requirements of the payment-service. Monitoring this limit is crucial to ensure that the payment-service (service_name) operates smoothly. If the limit is frequently reached, it may indicate a need to scale the cluster or optimize connection usage.",
+    "key_commands": [
+      "psql -c \"SHOW max_connections;\"",
+      "pg_ctlcluster <cluster_name> main restart"
+    ],
+    "related_runbook": "FTF-RB-007",
+    "escalation_threshold": "If the max_connections limit is reached more than 5 times in a 24-hour period, this is escalated to a P1 priority."
+  },
+  {
+    "qa_id": "FTF-QA-035",
+    "question": "How do I check PgBouncer pool usage?",
+    "category": "database",
+    "answer": "To check the PgBouncer pool usage, you can use the `show pool` command. For example, `pg_bouncer -c stats_pool=on -c admin_show_pool=on show pool` will display the current pool statistics. Ensure that the pool size and idle timeout are within the acceptable thresholds defined in your service-level agreements. If the pool usage is consistently high, it may indicate a need to scale resources or optimize queries.",
+    "key_commands": [
+      "pg_bouncer -c stats_pool=on -c admin_show_pool=on show pool"
+    ],
+    "related_runbook": "FTF-RB-045",
+    "escalation_threshold": "If the PgBouncer pool hit rate drops below 85% for more than 15 minutes, this is considered a P1 issue."
+  },
+  {
+    "qa_id": "FTF-QA-036",
+    "question": "What causes PostgreSQL replication lag at FinTechFlow?",
+    "category": "database",
+    "answer": "PostgreSQL replication lag at FinTechFlow can be caused by network latency, disk I/O bottlenecks, or configuration issues. Monitoring tools such as `pg_stat_replication` and `pg_waldump` can provide insights into replication status and WAL (Write-Ahead Log) segment usage. The replication lag should be closely monitored, and any issues should be addressed promptly to meet the SLOs.",
+    "key_commands": [
+      "pgrep -lf postgres | grep streaming",
+      "ps aux | grep 'pg_stat_replication'"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the replication lag exceeds 15 minutes for more than 30 minutes, it should be escalated to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-037",
+    "question": "How do I check disk usage on PostgreSQL EBS volume?",
+    "category": "database",
+    "answer": "To check disk usage on the PostgreSQL EBS volume, you can use the `df` command in Linux. Ensure that the volume is mounted at `/var/lib/postgresql` (default location). For example, run `df -h /var/lib/postgresql` to get a human-readable summary of the disk usage. Monitor the volume to ensure it stays above 80% free space to avoid performance issues, as per the SLO and P1 MTTR target.",
+    "key_commands": [
+      "df -h /var/lib/postgresql",
+      "tail -f /var/lib/postgresql/pg_log/postgresql-YYYY-MM-DD.log"
+    ],
+    "related_runbook": "FTF-RB-003",
+    "escalation_threshold": "If the disk usage exceeds 90%, it is considered a P1 issue at FinTechFlow, requiring immediate attention."
+  },
+  {
+    "qa_id": "FTF-QA-038",
+    "question": "What is the procedure when PostgreSQL WAL fills up?",
+    "category": "database",
+    "answer": "When PostgreSQL WAL (Write-Ahead Log) fills up, the first step is to scale the storage resources or optimize the database configuration. If the issue persists, the PostgreSQL service needs to be temporarily paused to prevent further data loss. Monitoring tools like Prometheus and Grafana can be used to set alerts for WAL usage and trigger the escalation procedure if the threshold is reached.",
+    "key_commands": [
+      "pg_wal\u6d41\u901f\u76d1\u63a7: `pg_stat_wal`",
+      "\u68c0\u67e5WAL\u6587\u4ef6\u5927\u5c0f: `du -sh /var/lib/postgresql/data/pg_wal`"
+    ],
+    "related_runbook": "FTF-RB-005",
+    "escalation_threshold": "If the WAL usage exceeds 95% of the allocated space for more than 15 minutes, it will trigger a P1 escalation."
+  },
+  {
+    "qa_id": "FTF-QA-039",
+    "question": "How do I check for PostgreSQL deadlocks on transactions table?",
+    "category": "database",
+    "answer": "To check for PostgreSQL deadlocks on the transactions table, run `SELECT * FROM pg_locks WHERE relation=(SELECT relation FROM pg_class WHERE.relname='transactions');` to identify any locks. Monitor the `pg_stat_activity` view for active transactions and their states. If a deadlock is suspected, use `SELECT * FROM pg_stat_activity WHERE state='active' AND query LIKE '%transactions%'` to get more context. Ensure the `max_locks_per_transaction` and `deadlock_timeout` parameters are set appropriately to prevent deadlocks.",
+    "key_commands": [
+      "SELECT * FROM pg_locks WHERE relation=(SELECT relation FROM pg_class WHERE relname='transactions');",
+      "SELECT * FROM pg_stat_activity WHERE state='active' AND query LIKE '%transactions%'"
+    ],
+    "related_runbook": "FTF-RB-007",
+    "escalation_threshold": "If more than 10 transactions are in a deadlock state for over 5 minutes."
+  },
+  {
+    "qa_id": "FTF-QA-040",
+    "question": "How do I identify slow queries in PostgreSQL?",
+    "category": "database",
+    "answer": "To identify slow queries in PostgreSQL at FinTechFlow, you can use the `EXPLAIN` command to analyze query plans and `pg_stat_statements` to track query performance over time. Set up an alert on `pg_stat_statements` to notify when queries exceed a 100ms threshold. This will help maintain the 99.95% uptime SLO for the payment-service.",
+    "key_commands": [
+      "EXPLAIN ANALYZE SELECT * FROM transactions WHERE status = 'pending'",
+      "SELECT * FROM pg_stat_statements WHERE total_time > 100 ORDER BY total_time DESC"
+    ],
+    "related_runbook": "FTF-RB-020",
+    "escalation_threshold": "If the total_time for any query exceeds 100ms for more than 5 consecutive minutes, it is considered a P1 issue."
+  },
+  {
+    "qa_id": "FTF-QA-041",
+    "question": "What is the Redis eviction policy at FinTechFlow?",
+    "category": "database",
+    "answer": "At FinTechFlow, the Redis eviction policy is set to 'volatile-lru' to ensure that the least recently used keys are removed when memory limits are exceeded. This policy is configured in the Redis deployment using the `maxmemory-policy` setting. The threshold for memory usage is set to 95% of the allocated Redis memory. The `payment-service` and `transaction-processor` services are the primary users of Redis, and their configurations are managed via ArgoCD to ensure consistency. The team monitors Redis memory usage closely using Prometheus and Grafana dashboards to prevent eviction.",
+    "key_commands": [
+      "redis-cli config get maxmemory-policy",
+      "redis-cli config get maxmemory"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If Redis memory usage exceeds 98% for more than 5 minutes, it will trigger a P1 alert in PagerDuty."
+  },
+  {
+    "qa_id": "FTF-QA-042",
+    "question": "How do I check Redis memory usage and fragmentation?",
+    "category": "database",
+    "answer": "To check Redis memory usage and fragmentation, you can use the `INFO` command with the `memory` parameter. For example, `redis-cli INFO memory` will provide detailed memory statistics. Additionally, the `MEMORY PURGE` command can help identify and remove unused memory. Ensure these metrics are monitored via Prometheus and Grafana to maintain SLOs. If memory usage exceeds 90% or fragmentation is causing performance issues, this could escalate to a P1 incident.",
+    "key_commands": [
+      "redis-cli INFO memory",
+      "redis-cli MEMORY PURGE"
+    ],
+    "related_runbook": "FTF-RB-007",
+    "escalation_threshold": "If Redis memory usage exceeds 90% for more than 15 minutes or if fragmentation is causing performance degradation, this is considered a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-043",
+    "question": "How do I flush Redis cache safely without causing stampede?",
+    "category": "database",
+    "answer": "To safely flush the Redis cache without causing a stampede, you should use the `FLUSHDB` command for a single database or `FLUSHALL` for all databases. Ensure this is done during a maintenance window and monitor the `P1 MTTR` target for any issues. The `payment-service` and `transaction-processor` should be paused to prevent writes during the operation.",
+    "key_commands": [
+      "redis-cli -h redis-host -p 6379 FLUSHDB",
+      "redis-cli -h redis-host -p 6379 FLUSHALL"
+    ],
+    "related_runbook": "FTF-RB-003",
+    "escalation_threshold": "If the `payment-service` experiences more than 10 consecutive minutes of downtime during or after the cache flush operation, it should be escalated to a P1 issue."
+  },
+  {
+    "qa_id": "FTF-QA-044",
+    "question": "What is the Elasticsearch heap size for our cluster?",
+    "category": "database",
+    "answer": "The Elasticsearch heap size for our cluster is configured based on the total number of nodes in the cluster and the amount of memory available. Typically, the heap size is set to 1GB per node, but this can vary. To check the current heap size, use the command `kubectl exec -it <es-pod-name> -- sh -c 'cat /etc/elasticsearch/jvm.options | grep -i xms'`. The Elasticsearch heap size is closely monitored using Prometheus and Grafana dashboards. If the heap size falls below 70% of the configured size, an alert is generated and escalated to the P1 level in PagerDuty.",
+    "key_commands": [
+      "kubectl exec -it <es-pod-name> -- sh -c 'cat /etc/elasticsearch/jvm.options | grep -i xms'",
+      "kubectl get pods -l app=elasticsearch -o jsonpath='{.items[0].metadata.name}'"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the Elasticsearch heap size falls below 70% of the configured size for more than 15 minutes, it is escalated to the P1 level in PagerDuty."
+  },
+  {
+    "qa_id": "FTF-QA-045",
+    "question": "How do I check Elasticsearch circuit breaker status?",
+    "category": "database",
+    "answer": "Refer to FinTechFlow database runbook.",
+    "key_commands": [],
+    "escalation_threshold": "P1 when service SLO breached"
+  },
+  {
+    "qa_id": "FTF-QA-046",
+    "question": "How do I identify which Elasticsearch query is consuming most memory?",
+    "category": "database",
+    "answer": "Refer to FinTechFlow database runbook.",
+    "key_commands": [],
+    "escalation_threshold": "P1 when service SLO breached"
+  },
+  {
+    "qa_id": "FTF-QA-047",
+    "question": "How do I recover an Elasticsearch red cluster status?",
+    "category": "database",
+    "answer": "Refer to FinTechFlow database runbook.",
+    "key_commands": [],
+    "escalation_threshold": "P1 when service SLO breached"
+  },
+  {
+    "qa_id": "FTF-QA-048",
+    "question": "What is PostgreSQL autovacuum configuration at FinTechFlow?",
+    "category": "database",
+    "answer": "At FinTechFlow, the autovacuum configuration for PostgreSQL is tuned to ensure optimal performance and maintenance of the database. The autovacuum process is configured with a vacuum threshold of 5000 rows and a vacuum delay of 300 seconds. This configuration is critical for the payment-service, ensuring minimal disruption to service uptime. The specific autovacuum parameters are managed via the PostgreSQL configuration file, with regular monitoring and adjustments made through Prometheus and Grafana dashboards.",
+    "key_commands": [
+      "pgautovac -c 'autovacuum_vacuum_threshold=5000'",
+      "pgautovac -c 'autovacuum_vacuum_delay=300'"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the autovacuum process fails to start or if the database experiences more than a 10% increase in transaction latency due to vacuuming, it will be escalated to a P1 issue."
+  },
+  {
+    "qa_id": "FTF-QA-049",
+    "question": "How do I check PostgreSQL table bloat?",
+    "category": "database",
+    "answer": "To check PostgreSQL table bloat, run `pg_table_size` and `pg_total_relation_size` commands to get the size of the table and its indexes, respectively. Compare these sizes with the actual table size to identify bloat. Monitor the `pgstattuple` extension for detailed statistics. If the bloat percentage exceeds 20%, it may require maintenance. Ensure to review SLOs for payment-service (99.95% uptime) and follow P1 MTTR target (30 minutes).",
+    "key_commands": [
+      "SELECT relname, pg_table_size(relname) AS table_size, pg_total_relation_size(relname) AS total_size, (pg_total_relation_size(relname) - pg_table_size(relname))::float / pg_total_relation_size(relname) * 100 AS bloat_percentage FROM pg_catalog.pg_statio_user_tables;",
+      "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
+    ],
+    "related_runbook": "FTF-RB-005",
+    "escalation_threshold": "If the bloat percentage exceeds 30% or if the maintenance task takes more than 15 minutes, it should be escalated to P1."
+  },
+  {
+    "qa_id": "FTF-QA-050",
+    "question": "How do I increase PostgreSQL max_connections temporarily?",
+    "category": "database",
+    "answer": "To temporarily increase the `max_connections` setting in PostgreSQL for FinTechFlow, you can modify the `postgresql.conf` file. Set `max_connections` to a higher value, such as 200, and restart the PostgreSQL service. Monitor the system for resource usage and performance. Ensure to revert the change after testing to avoid potential issues.",
+    "key_commands": [
+      "sudo nano /var/lib/postgresql/<version>/data/postgresql.conf",
+      "sudo systemctl restart postgresql"
+    ],
+    "related_runbook": "null",
+    "escalation_threshold": "If the increase in `max_connections` leads to a performance degradation or resource exhaustion, it will be escalated to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-051",
+    "question": "What is the Redis sentinel configuration at FinTechFlow?",
+    "category": "database",
+    "answer": "At FinTechFlow, Redis Sentinel is configured to monitor and manage up to 5 primary-standby pairs. Each Sentinel instance is configured with a `down-after-milliseconds` of 60000 and `failover-timeout` of 1800000. The `quorum` is set to 3, ensuring that at least 3 Sentinels agree before a failover is initiated. Failover procedures are automated, with the `auto-failover` role assigned to all Sentinels to ensure rapid recovery of the Redis cluster.",
+    "key_commands": [
+      "sentinel monitor mymaster 127.0.0.1 6379 3",
+      "sentinel config-get quorum mymaster"
+    ],
+    "related_runbook": "FTF-RB-03",
+    "escalation_threshold": "A P1 escalation is triggered if a primary Redis instance is down for more than 10 minutes."
+  },
+  {
+    "qa_id": "FTF-QA-052",
+    "question": "How do I trigger Redis failover manually?",
+    "category": "database",
+    "answer": "To manually trigger a Redis failover, first ensure that the Redis cluster is configured for automatic failover. You can then use the `redis-cli` tool to perform a failover. For example, run `redis-cli -h <master-host> failover manual <master-name>` to initiate failover. Ensure that the `maxfailovers` threshold is not hit, as it could prevent the failover. This process should be documented in the FinTechFlow operations manual.",
+    "key_commands": [
+      "redis-cli -h <master-host> failover manual <master-name>"
+    ],
+    "related_runbook": "FTF-RB-007",
+    "escalation_threshold": "If the manual failover process fails to resolve within 15 minutes, it will be escalated to the P1 incident response team."
+  },
+  {
+    "qa_id": "FTF-QA-053",
+    "question": "What are the PostgreSQL monitoring alerts we have in Prometheus?",
+    "category": "database",
+    "answer": "We have configured Prometheus to monitor PostgreSQL performance and alert on critical issues. For instance, we set up alerts for high CPU usage exceeding 80%, slow query times over 5 seconds, and connection errors. These alerts are crucial for maintaining the payment-service\u2019s 99.95% uptime SLO. Specific alerts are linked to the payment-service and transaction-processor services.",
+    "key_commands": [
+      "prometheus --web.console.templates=/etc/prometheus/consoles",
+      "prometheus --web.console.libraries=/etc/prometheus/console_libraries"
+    ],
+    "related_runbook": "FTF-RB-002",
+    "escalation_threshold": "If more than 5% of the PostgreSQL instances show slow query times over 5 seconds for over 15 minutes, it escalates to P1."
+  },
+  {
+    "qa_id": "FTF-QA-054",
+    "question": "How do I check PostgreSQL streaming replication slot lag?",
+    "category": "database",
+    "answer": "Refer to FinTechFlow database runbook.",
+    "key_commands": [],
+    "escalation_threshold": "P1 when service SLO breached"
+  },
+  {
+    "qa_id": "FTF-QA-055",
+    "question": "What is the procedure for PostgreSQL point-in-time recovery?",
+    "category": "database",
+    "answer": "PostgreSQL point-in-time recovery involves restoring the database to a state at a specific point in time. First, ensure you have a backup that includes the desired point-in-time. Then, use the `pg_restore` command with the `--point-in-time` option to restore the backup to the target time. Finally, verify the restoration using the `pg_controldata` command to check the timeline and `pg_is_running` to ensure the service is up and running.",
+    "key_commands": [
+      "pg_restore --point-in-time='2023-10-01 12:00:00' --dbname='mydatabase' backup.tar",
+      "pg_controldata /var/lib/postgresql/data | grep 'Latest checkpoint time'",
+      "pg_is_running -d mydatabase"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the point-in-time recovery process exceeds 30 minutes, it will be escalated to the SRE team as a P1 issue."
+  },
+  {
+    "qa_id": "FTF-QA-056",
+    "question": "How do I check Elasticsearch shard allocation status?",
+    "category": "database",
+    "answer": "To check the shard allocation status in Elasticsearch, you can use the `_cat/shards` API. For example, you can run `kubectl exec -n <namespace> <elasticsearch-pod-name> -- curl -X GET \"http://localhost:9200/_cat/shards?v&h=index,pri,shard,prirep,docs,biggest\"` to get a detailed view. Ensure that all primary shards are allocated and no unassigned shards exist. If there are issues, review the Elasticsearch logs and use `kubectl exec -n <namespace> <elasticsearch-pod-name> -- curl -X GET \"http://localhost:9200/_cluster/allocation/explain\"` for detailed allocation explainations.",
+    "key_commands": [
+      "kubectl exec -n <namespace> <elasticsearch-pod-name> -- curl -X GET \"http://localhost:9200/_cat/shards?v&h=index,pri,shard,prirep,docs,biggest\"",
+      "kubectl exec -n <namespace> <elasticsearch-pod-name> -- curl -X GET \"http://localhost:9200/_cluster/allocation/explain\""
+    ],
+    "related_runbook": "FTF-RB-005",
+    "escalation_threshold": "If more than 10% of shards are unassigned or if the shard allocation process is taking longer than 15 minutes, this should be escalated to the SRE team."
+  },
+  {
+    "qa_id": "FTF-QA-057",
+    "question": "What command shows PostgreSQL checkpoint frequency?",
+    "category": "database",
+    "answer": "To check the current checkpoint settings in PostgreSQL, you can use the `SHOW` command. For example, to view the frequency of checkpoints, run `SHOW checkpoint_completion_target;`. You can also check the checkpoint settings by running `SHOW checkpoint_timeout;`. Ensure these values align with your SLO of 99.95% uptime for the payment-service.",
+    "key_commands": [
+      "SHOW checkpoint_completion_target;",
+      "SHOW checkpoint_timeout;"
+    ],
+    "related_runbook": "FTF-RB-005",
+    "escalation_threshold": "If the checkpoint frequency falls below 0.95 for more than 15 minutes, it should be escalated to P1."
+  },
+  {
+    "qa_id": "FTF-QA-058",
+    "question": "How do I rotate PostgreSQL credentials safely?",
+    "category": "database",
+    "answer": "To safely rotate PostgreSQL credentials at FinTechFlow, you need to update the credentials in the Spring Boot and FastAPI services, regenerate the environment variables, and update the database connection strings. Ensure that the transition is seamless by performing the update during a maintenance window and monitoring the services for any issues. The payment-service has a P1 MTTR target of 30 minutes, so any change should be done carefully to avoid downtime.",
+    "key_commands": [
+      "kubectl edit secret <service-name>-secrets -n <namespace> --patch='{\"data\": {\"DB_PASSWORD\": \"$(echo -n <new-password> | base64)\"}}'",
+      "kubectl rollout restart deployment <service-name> -n <namespace>"
+    ],
+    "related_runbook": "FTF-RB-003",
+    "escalation_threshold": "If the service downtime exceeds 15 minutes, it will be escalated to a P1."
+  },
+  {
+    "qa_id": "FTF-QA-059",
+    "question": "What is PgBouncer pool_mode at FinTechFlow and why?",
+    "category": "database",
+    "answer": "At FinTechFlow, the `pool_mode` in PgBouncer is set to `transaction`. This mode ensures that connections are closed after the completion of a transaction, which helps in maintaining a healthy connection pool and reduces the risk of connection leaks. This is critical for our high-transaction volume services like the payment-service, where reliability and performance are paramount. By setting `pool_mode` to `transaction`, we can ensure that connections are properly managed and recycled, aligning with our SLO of 99.95% uptime.",
+    "key_commands": [
+      "pgbouncer -c pool_mode=transaction",
+      "pgbounceradmin -c set pool_mode=transaction"
+    ],
+    "related_runbook": "FTF-RB-023",
+    "escalation_threshold": "If the connection pool reaches 80% utilization for more than 5 minutes, it triggers a P1 escalation to the SRE team."
+  },
+  {
+    "qa_id": "FTF-QA-060",
+    "question": "How do I verify PostgreSQL backup integrity?",
+    "category": "database",
+    "answer": "To verify the integrity of PostgreSQL backups at FinTechFlow, you can use the `pg_restore` tool with the `--list` option to check the contents of the backup file and ensure it contains all expected files. Additionally, you can use `pg_basebackup` with the `--xlog-method` option to verify the recovery of the backup. Ensure the backup is within the acceptable SLA thresholds and that the service `transaction-processor` is up and running.",
+    "key_commands": [
+      "pg_restore --list /path/to/backup.dump",
+      "pg_basebackup --xlog-method=stream --pgdata=/path/to/data"
+    ],
+    "related_runbook": "FTF-RB-045",
+    "escalation_threshold": "If the verification process fails and the `transaction-processor` service is down for more than 15 minutes."
+  },
+  {
+    "qa_id": "FTF-QA-061",
+    "question": "How do I check ALB target health in AWS console?",
+    "category": "network",
+    "answer": "To check the health of Application Load Balancer (ALB) targets in the AWS Management Console, navigate to the ALB in the EC2 dashboard, then go to the 'Target Groups' tab. Here, you can view the health of each target. Any target with a health status other than 'Healthy' may require attention. Ensure the health check path and interval are configured according to the SLOs and P1 MTTR targets for the payment-service.",
+    "key_commands": [
+      "aws elb describe-load-balancers --load-balancer-name <ALB_NAME>",
+      "aws elb describe-instance-health --load-balancer-name <ALB_NAME> --target-group-name <TARGET_GROUP_NAME>"
+    ],
+    "related_runbook": "FTF-RB-04",
+    "escalation_threshold": "If more than 10% of the payment-service targets are marked as unhealthy for over 15 minutes."
+  },
+  {
+    "qa_id": "FTF-QA-062",
+    "question": "What do I do when Route53 returns NXDOMAIN for payment-api?",
+    "category": "network",
+    "answer": "When Route53 returns NXDOMAIN for the payment-api, first verify the DNS record in Route53. Ensure that the A or CNAME record for payment-api is correctly configured and points to the correct IP address or hostname. If the record is correct, check the health checks in Route53 to ensure they are not failing. If health checks are failing, investigate the services behind the health checks.",
+    "key_commands": [
+      "dig +short payment-api.fin-tech-flow.com",
+      "aws route53 list-resource-record-sets --hosted-zone-id <HOSTED_ZONE_ID> --query 'ResourceRecordSets[?Name==`payment-api.fin-tech-flow.com.`]'"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the NXDOMAIN issue persists for more than 30 minutes and affects the payment-service SLO, escalate to the on-call engineer."
+  },
+  {
+    "qa_id": "FTF-QA-063",
+    "question": "How do I check Kafka broker status?",
+    "category": "network",
+    "answer": "To check the status of Kafka brokers in FinTechFlow, you can use the `kafka-broker-api` tool and `kafka-topics.sh` script. Ensure that all brokers are running with no errors by checking the logs and monitoring with Prometheus and Grafana. Monitor the broker health using the `kafka-broker-api` tool with the command `bin/kafka-broker-api.sh --describe <broker_id>` to check API availability. Ensure that the broker metrics are within the acceptable range, with no red alarms in Prometheus.",
+    "key_commands": [
+      "bin/kafka-broker-api.sh --describe <broker_id>",
+      "kubectl -n <namespace> get pods -l app=kafka"
+    ],
+    "related_runbook": "FTF-RB-02",
+    "escalation_threshold": "If any broker shows more than 5000 errors in 5 minutes, or if the broker is down for more than 15 minutes, this is escalated to P1."
+  },
+  {
+    "qa_id": "FTF-QA-064",
+    "question": "What command shows Kafka consumer group lag?",
+    "category": "network",
+    "answer": "To monitor Kafka consumer group lag at FinTechFlow, you can use the `kafka-consumer-groups.sh` script. For example, the command `./kafka-consumer-groups.sh --bootstrap-server <kafka-broker-host>:9092 --describe --group <consumer-group-name>` will show detailed information about the consumer group, including lag. Ensure that the lag is below the threshold of 10,000 messages to meet the P1 MTTR target of 30 minutes for the payment-service.",
+    "key_commands": [
+      "./kafka-consumer-groups.sh --bootstrap-server <kafka-broker-host>:9092 --describe --group <consumer-group-name>",
+      "tail -f /path/to/kafka-consumer-logs"
+    ],
+    "related_runbook": "FTF-RB-007",
+    "escalation_threshold": "If the lag exceeds 10,000 messages for more than 15 minutes, it is considered a P1 issue."
+  },
+  {
+    "qa_id": "FTF-QA-065",
+    "question": "How do I reduce Kafka consumer lag quickly?",
+    "category": "network",
+    "answer": "To reduce Kafka consumer lag, increase the fetch.min.bytes and session.timeout.ms parameters in the consumer configuration. Monitor the lags using Kafka's built-in metrics exposed via Prometheus. If the issue persists, check the network latency between the consumer and broker using tools like `traceroute` or `ping`. Adjust the consumer group settings as necessary.",
+    "key_commands": [
+      "kubectl exec -it <consumer-pod-name> -- kafka-configs --zookeeper <zookeeper-service-name>:2181 --alter --add-config fetch.min.bytes=100,session.timeout.ms=60000",
+      "kubectl top pod <consumer-pod-name> -n <namespace> | grep -i lag"
+    ],
+    "related_runbook": "FTF-RB-007",
+    "escalation_threshold": "If consumer lag consistently exceeds 10 seconds for more than 5 minutes, it should be escalated to P1."
+  },
+  {
+    "qa_id": "FTF-QA-066",
+    "question": "How do I check Cloudflare SSL certificate expiry?",
+    "category": "network",
+    "answer": "To check the expiry date of a Cloudflare SSL certificate, you can use the `openssl` command-line tool. For example, run `openssl x509 -noout -text -in /path/to/your/certificate.pem` and look for the 'Not After' field. Additionally, you can use the Cloudflare API to programmatically check certificate expiry. Ensure the certificate expires at least 30 days before renewal to meet P1 MTTR targets.",
+    "key_commands": [
+      "openssl x509 -noout -text -in /path/to/your/certificate.pem",
+      "curl -X GET https://api.cloudflare.com/client/v4/zones/YOUR_ZONE_ID/certificates/YOUR_CERTIFICATE_ID -H 'Authorization: Bearer YOUR_API_TOKEN'"
+    ],
+    "related_runbook": "FTF-RB-025",
+    "escalation_threshold": "If the SSL certificate is less than 30 days from expiry, it should be escalated immediately to ensure timely renewal and prevent service disruptions."
+  },
+  {
+    "qa_id": "FTF-QA-067",
+    "question": "What is the Cloudflare WAF configuration for payment traffic?",
+    "category": "network",
+    "answer": "The Cloudflare WAF for payment traffic is configured to enforce strict security rules to protect against common attacks such as SQL injection and cross-site scripting (XSS). Specific rules are applied to the payment-service and transaction-processor services to block malicious requests. The WAF is set to monitor and log all incoming requests, with alerts configured to trigger at 500 concurrent requests per second to ensure timely response to potential DDoS attacks.",
+    "key_commands": [
+      "cloudflare waf policy update --name 'PaymentTrafficPolicy' --rules 'sql-injection, xss, ddostracking' --service payment-service --service transaction-processor",
+      "cloudflare waf alert create --policy 'PaymentTrafficPolicy' --rate 500 --action block"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the WAF triggers more than 10 false positives in a 24-hour period, this is escalated to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-068",
+    "question": "How do I check VPC peering routes in AWS?",
+    "category": "network",
+    "answer": "To check VPC peering routes in AWS, you can use the AWS CLI command `aws ec2 describe-vpc-peering-connections` to list all VPC peering connections and their status. Then, use `aws ec2 describe-route-tables` to view the route tables associated with your VPCs and ensure that the routes for the peer VPCs are correctly configured. Monitor these routes using CloudWatch for any anomalies that could impact your SLO of 99.95% uptime.",
+    "key_commands": [
+      "aws ec2 describe-vpc-peering-connections --query 'VpcPeeringConnections[*].{PeeringId:VpcPeeringConnectionId,Status:Status.Code}' --output table",
+      "aws ec2 describe-route-tables --query 'RouteTables[?VpcId==`vpc-0123456789abcdef0`].{Routes:Routes[*].DestinationCidrBlock}' --output table"
+    ],
+    "related_runbook": "FTF-RB-012",
+    "escalation_threshold": "If VPC peering routes are not properly configured and this leads to a service outage lasting more than 5 minutes, it will be escalated to P1."
+  },
+  {
+    "qa_id": "FTF-QA-069",
+    "question": "What is the AWS NAT Gateway limits for FinTechFlow?",
+    "category": "network",
+    "answer": "For FinTechFlow, the AWS NAT Gateway limits include a maximum of 5 concurrent connections per second and a maximum of 40,000 packets per second. These limits are sufficient for the current traffic load but should be monitored closely. If the limits are reached, the network team should scale the NAT Gateway or use a transit gateway for better performance and reliability.",
+    "key_commands": [
+      "aws ec2 describe-network-interface-attributes --network-interface-ids <NAT_GATEWAY_INTERFACE_ID>",
+      "aws ec2 describe-network-interface-status --network-interface-ids <NAT_GATEWAY_INTERFACE_ID>"
+    ],
+    "related_runbook": "FTF-RB-003",
+    "escalation_threshold": "If the NAT Gateway reaches 90% of its packet limit consistently, it should be escalated to the network team for scaling or replacement."
+  },
+  {
+    "qa_id": "FTF-QA-070",
+    "question": "How do I check AWS Security Group rules for payment-service?",
+    "category": "network",
+    "answer": "To check AWS Security Group rules for the payment-service, you can use the AWS Management Console or the AWS CLI. In the console, navigate to the EC2 dashboard, select Security Groups, and filter by the security group associated with the payment-service. Alternatively, use the AWS CLI command `aws ec2 describe-security-groups --group-ids <SG_ID> --filters Name-group-name,Values=<SG_NAME>` to list the rules. Ensure the rules allow necessary traffic and meet the SLO of 99.95% uptime.",
+    "key_commands": [
+      "aws ec2 describe-security-groups --group-ids sg-0123456789abcdef0 --filters Name-group-name,Values=payment-service-sg",
+      "aws ec2 authorize-security-group-ingress --group-id sg-0123456789abcdef0 --protocol tcp --port 22 --cidr 0.0.0.0/0"
+    ],
+    "related_runbook": "FTF-RB-010",
+    "escalation_threshold": "If the Security Group rules are not updated within 30 minutes after a critical change request, it triggers a P1 escalation."
+  },
+  {
+    "qa_id": "FTF-QA-071",
+    "question": "How do I add a Kafka consumer to reduce lag quickly?",
+    "category": "network",
+    "answer": "Refer to FinTechFlow network runbook.",
+    "key_commands": [],
+    "escalation_threshold": "P1 when service SLO breached"
+  },
+  {
+    "qa_id": "FTF-QA-072",
+    "question": "What is the Kafka replication factor for payment topics?",
+    "category": "network",
+    "answer": "The Kafka replication factor for payment topics is set to 3 to ensure high availability and fault tolerance. This replication factor can be verified using the command `kafka-topics --describe --topic payment-topic --bootstrap-server <kafka-bootstrap-server>` in the Kafka cluster. If the replication factor is not meeting the SLO, the `replication-factor` parameter can be adjusted in the Kafka configuration and the topic recreated. The `payment-service` and `transaction-processor` services are closely monitored for any disruptions.",
+    "key_commands": [
+      "kafka-topics --describe --topic payment-topic --bootstrap-server <kafka-bootstrap-server>",
+      "kubectl get kafka --namespace <kafka-namespace>"
+    ],
+    "related_runbook": "FTF-RB-03",
+    "escalation_threshold": "If the replication factor drops below 2 for more than 5 minutes, it will be escalated to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-073",
+    "question": "How do I check if ALB access logs are being delivered?",
+    "category": "network",
+    "answer": "To ensure that ALB access logs are being delivered, check the CloudWatch Logs for the Application Load Balancer. Use the `aws logs describe-log-groups` command to list log groups and filter by the ALB name. Verify that the log group has a log stream and check the log entries for recent access logs. Monitor the logs using Grafana dashboards or manually inspect them using the `aws logs get-log-events` command.",
+    "key_commands": [
+      "aws logs describe-log-groups --filter-pattern \"alb-name=your-alb-name\"",
+      "aws logs get-log-events --log-group-name /aws-elb/your-alb-name-access-logs"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "No logs are found for the ALB access logs for more than 1 hour, or logs are present but no new entries for the past 30 minutes."
+  },
+  {
+    "qa_id": "FTF-QA-074",
+    "question": "What is the Route53 health check configuration?",
+    "category": "network",
+    "answer": "At FinTechFlow, Route53 health checks are configured to monitor the availability of our services, including payment-service, order-service, and transaction-processor. Health checks are set up to ping these services at regular intervals and trigger failovers if any service fails more than three consecutive checks. Specific thresholds include a 5-minute check interval and a 300-second timeout. This ensures that any issues are detected and addressed promptly to meet our SLO of 99.95% uptime for the payment-service.",
+    "key_commands": [
+      "aws route53 create-health-check --caller-reference $(date +%s) --health-check-config 'Idleness=300,FailureThreshold=3,MeasureName=HTTPCode_2XX,ResponseTimeout=30,Type=HTTP,ResourcePath=/healthcheck'"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If a service fails more than three consecutive health checks, it is escalated to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-075",
+    "question": "How do I check AWS Transit Gateway route table?",
+    "category": "network",
+    "answer": "To check the AWS Transit Gateway route table, you can use the AWS CLI command `aws transitgateway describe-route-tables` or the AWS Management Console. In the CLI, use `aws transitgateway describe-route-tables --transit-gateway-id <tgw-id> --filters Name.route-table-id,Values=<route-table-id>` to get specific details. Ensure the route table includes the appropriate routes to VPCs and subnets.",
+    "key_commands": [
+      "aws transitgateway describe-route-tables --transit-gateway-id tgw-01234567890abcdef0 --filters Name.route-table-id,Values=rtgw-01234567890abcdef0",
+      "aws ec2 describe-route-tables --filters Name.transit-gateway-id,Values=tgw-01234567890abcdef0"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the route table is missing critical routes or has incorrect routing configurations leading to service downtime or data loss, this is considered a P1 issue at FinTechFlow."
+  },
+  {
+    "qa_id": "FTF-QA-076",
+    "question": "What is the Kafka retention policy for payment events?",
+    "category": "network",
+    "answer": "The Kafka retention policy for payment events is configured to retain messages for 30 days to ensure that all transaction data is stored for an adequate period for auditing and forensic analysis. This is enforced by setting the `retention.ms` and `retention.bytes` properties in the Kafka configuration for the `payment-events` topic. The exact values and configurations are managed via ArgoCD to ensure consistency across all Kubernetes clusters.",
+    "key_commands": [
+      "kubectl exec -it kafka-0 -c kafka-broker -- kafka-topics --describe --topic payment-events",
+      "kubectl exec -it kafka-0 -c kafka-broker -- kafka-configs --describe --entity-type topics --entity-name payment-events"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the Kafka retention policy is not met, and the system is unable to retain messages for the required 30 days, it will trigger a P1 alert as critical system functionality is impacted."
+  },
+  {
+    "qa_id": "FTF-QA-077",
+    "question": "How do I check Cloudflare DDoS protection status?",
+    "category": "network",
+    "answer": "To check the Cloudflare DDoS protection status, you can use the Cloudflare API or the Cloudflare dashboard. For API access, use the command `curl -X GET https://api.cloudflare.com/client/v4/zones/YOUR_ZONE_ID/ddos/protection` with your API token. In the dashboard, navigate to the Zone settings, then to the DDoS Protection section to view the real-time status and alerts. Ensure your thresholds are set to trigger alerts for any potential DDoS attacks, which should be defined in your service-level agreements (SLAs) and incident response plans.",
+    "key_commands": [
+      "curl -X GET https://api.cloudflare.com/client/v4/zones/YOUR_ZONE_ID/ddos/protection -H 'X-Auth-Email: YOUR_EMAIL' -H 'X-Auth-Key: YOUR_API_TOKEN'"
+    ],
+    "related_runbook": "FTF-RB-003",
+    "escalation_threshold": "If the DDoS protection status shows a high-level attack (e.g., more than 1000 attacks detected in the last hour) and the MTTR exceeds 30 minutes, this would be escalated to a P1 priority."
+  },
+  {
+    "qa_id": "FTF-QA-078",
+    "question": "How do I verify DNS propagation after Route53 change?",
+    "category": "network",
+    "answer": "To verify DNS propagation after making a change in Route53, run `dig +noall +answer <domain_name> @<resolver_ip>` to check the DNS records. Monitor the DNS resolution using `nslookup <domain_name> <resolver_ip>` and ensure the new records are returned. Once the changes are visible, use `kubectl get svc <service_name>` to confirm the updated DNS entries are reflected in the Kubernetes service definitions.",
+    "key_commands": [
+      "dig +noall +answer example.com @8.8.8.8",
+      "nslookup example.com 8.8.8.8",
+      "kubectl get svc payment-service"
+    ],
+    "related_runbook": "FTF-RB-003",
+    "escalation_threshold": "If DNS changes are not reflected within 30 minutes, escalate to the on-call team."
+  },
+  {
+    "qa_id": "FTF-QA-079",
+    "question": "What is the ALB idle timeout for payment-service?",
+    "category": "network",
+    "answer": "The ALB idle timeout for the payment-service is set to 60 seconds to ensure that connections are not kept open indefinitely. This setting can be verified using the AWS CLI command: `aws elbv2 describe-listener --listener-arn <listener_arn> --query 'Listeners[0].IdleTimeout' --output text`. If the idle timeout needs to be adjusted, the command `aws elbv2 modify-listener-attributes --listener-arn <listener_arn> --attributes IdleTimeout=90` can be used to set it to 90 seconds. Monitoring this parameter is crucial to maintaining high availability and performance of the payment-service.",
+    "key_commands": [
+      "aws elbv2 describe-listener --listener-arn arn:aws:elasticloadbalancing:us-west-2:123456789012:listener/app/my-load-balancer/507944ab55b7ec4c/4643866d9d8a7d2d --query 'Listeners[0].IdleTimeout' --output text",
+      "aws elbv2 modify-listener-attributes --listener-arn arn:aws:elasticloadbalancing:us-west-2:123456789012:listener/app/my-load-balancer/507944ab55b7ec4c/4643866d9d8a7d2d --attributes IdleTimeout=90"
+    ],
+    "related_runbook": "FTF-RB-012",
+    "escalation_threshold": "If the ALB idle timeout is not set correctly and results in a service disruption lasting longer than 30 minutes, this would be escalated to a P1 issue due to the impact on the payment-service's SLO of 99.95% uptime."
+  },
+  {
+    "qa_id": "FTF-QA-080",
+    "question": "How do I check Kafka partition distribution?",
+    "category": "network",
+    "answer": "To check the Kafka partition distribution, run the `kafka-topics.sh` command with the `--describe` flag. This command provides detailed information about each topic, including the number of partitions and replicas. Ensure that the partitions are evenly distributed across brokers to meet the 99.95% uptime SLO for the payment-service. Monitor using Prometheus and Grafana dashboards.",
+    "key_commands": [
+      "kafka-topics.sh --describe --topic <topic_name>",
+      "kafka-topics.sh --list"
+    ],
+    "related_runbook": "FTF-RB-04",
+    "escalation_threshold": "If more than 10% of partitions have an availability below 99.95%, this is considered a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-081",
+    "question": "How do I temporarily disable Cloudflare WAF rule?",
+    "category": "network",
+    "answer": "Refer to FinTechFlow network runbook.",
+    "key_commands": [],
+    "escalation_threshold": "P1 when service SLO breached"
+  },
+  {
+    "qa_id": "FTF-QA-082",
+    "question": "What is the VPC CIDR range for FinTechFlow production?",
+    "category": "network",
+    "answer": "The VPC CIDR range for FinTechFlow production is 10.0.0.0/16. This range was chosen to allow for a large number of subnets within the VPC. The specific allocation is documented in the network design document and can be verified using the AWS CLI with the command: `aws ec2 describe-vpcs --vpc-id <vpc-id> --query Vpcs[0].CidrBlock`.",
+    "key_commands": [
+      "aws ec2 describe-vpcs --vpc-id <vpc-id> --query Vpcs[0].CidrBlock"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the VPC CIDR range becomes exhausted or a critical subnet is misconfigured, this would be escalated to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-083",
+    "question": "How do I check inter-service network latency in EKS?",
+    "category": "network",
+    "answer": "To check inter-service network latency in EKS, you can use `kubectl` to run `traceroute` commands from one service to another. For example, to trace the path from the payment-service to the transaction-processor, you can use `kubectl exec -it <payment-service-pod> -- traceroute <transaction-processor-service-name>. Also, monitoring tools like Prometheus with the Kubernetes Service Mesh metrics can provide real-time latency metrics. Ensure thresholds are set for high latency to trigger alerts, such as over 100ms latency between services.",
+    "key_commands": [
+      "kubectl exec -it <payment-service-pod> -- traceroute <transaction-processor-service-name>",
+      "kubectl get svc <transaction-processor-service-name> -o jsonpath='{.status.loadBalancer.ingress[0].ip}'"
+    ],
+    "related_runbook": "FTF-RB-012",
+    "escalation_threshold": "Latency exceeding 100ms for more than 5 minutes between critical services like payment-service and transaction-processor."
+  },
+  {
+    "qa_id": "FTF-QA-084",
+    "question": "What is the Kafka exactly-once semantics configuration?",
+    "category": "network",
+    "answer": "To achieve exactly-once semantics in Kafka, FinTechFlow needs to configure the `idempotent producer` setting in the producer configuration. Additionally, the `transactional.id` and `transactional.id.auto.create` properties must be set. This ensures that each message is processed exactly once, even in the event of a failure. The `transactional.id` should be set to a unique value for each transaction, and the `transactional.id.auto.create` should be set to `false` to prevent automatic creation of transactional IDs.",
+    "key_commands": [
+      "kafka-configs.sh --entity-type producers --entity-name producer-name --alter --add-config idempotentProducer=true",
+      "kafka-configs.sh --entity-type brokers --alter --add-config transactionalIdAutoCreate=false"
+    ],
+    "related_runbook": "FTF-RB-042",
+    "escalation_threshold": "A P1 escalation is triggered if the exactly-once semantics are not properly configured, leading to duplicate or missing transactions in the payment-service, affecting the 99.95% uptime SLO."
+  },
+  {
+    "qa_id": "FTF-QA-085",
+    "question": "How do I check AWS NLB connection tracking limits?",
+    "category": "network",
+    "answer": "To check the connection tracking limits on your AWS Network Load Balancer (NLB) at FinTechFlow, you can use the `aws` CLI command with the appropriate region and NLB name. The command is: `aws elbv2 describe-load-balancer-attributes --load-balancer-arn arn:aws:elasticloadbalancing:<region>:<account-id>:load-balancer/net/<nlb-name> --query 'LoadBalancerAttributes.ConnectionDrainingPolicy.Enabled'`. For monitoring, ensure that the connection draining is enabled and the maximum connections per target is set to at least 5000 to meet the 99.95% uptime SLO. If thresholds are exceeded, this can become a P1 incident as it may impact service availability.",
+    "key_commands": [
+      "aws elbv2 describe-load-balancer-attributes --load-balancer-arn arn:aws:elasticloadbalancing:<region>:<account-id>:load-balancer/net/<nlb-name> --query 'LoadBalancerAttributes.ConnectionDrainingPolicy.Enabled'",
+      "aws elbv2 modify-load-balancer-attributes --load-balancer-arn arn:aws:elasticloadbalancing:<region>:<account-id>:load-balancer/net/<nlb-name> --attributes '[{\"Key\":\"ConnectionDraining\",\"Value\":\"Enabled\"},{\"Key\":\"ConnectionDrainingTimeout\",\"Value\":\"300\"},{\"Key\":\"ConnectionSettings\",\"Value\":\"{\\\"IdleTimeout\\\":3600}\\\"}]'"
+    ],
+    "related_runbook": "FTF-RB-007",
+    "escalation_threshold": "If the connection draining is not enabled or the maximum connections per target is set below 5000, this should be escalated to the SRE team as it may impact the payment-service's uptime."
+  },
+  {
+    "qa_id": "FTF-QA-086",
+    "question": "How do I check why a pod is in CrashLoopBackOff?",
+    "category": "kubernetes",
+    "answer": "To check why a pod is in CrashLoopBackOff, first, use `kubectl get pods` to find the name of the problematic pod. Then, use `kubectl describe pod <pod-name>` to get detailed logs and events. Look for error messages or logs indicating the reason for the failure. Also, check the container logs using `kubectl logs <pod-name> -c <container-name>`.",
+    "key_commands": [
+      "kubectl get pods",
+      "kubectl describe pod <pod-name>",
+      "kubectl logs <pod-name> -c <container-name>"
+    ],
+    "related_runbook": "FTF-RB-002",
+    "escalation_threshold": "If the pod remains in CrashLoopBackOff for more than 1 hour, it will be escalated to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-087",
+    "question": "What command shows pod resource usage in EKS?",
+    "category": "kubernetes",
+    "answer": "To monitor pod resource usage in EKS, you can use `kubectl top pod` to see CPU and memory usage. For a more detailed view, you can use `kubectl describe pod <pod-name>` to get information about the container's resources, including limits and requests. Ensure that the `metrics-server` is installed and properly configured in your EKS cluster to provide accurate metrics.",
+    "key_commands": [
+      "kubectl top pod",
+      "kubectl describe pod <pod-name>"
+    ],
+    "related_runbook": "FTF-RB-010",
+    "escalation_threshold": "If the CPU or memory usage exceeds 80% for more than 15 minutes, it is considered a P1 issue."
+  },
+  {
+    "qa_id": "FTF-QA-088",
+    "question": "How do I safely restart payment-service pods?",
+    "category": "kubernetes",
+    "answer": "To safely restart payment-service pods, first drain the node to ensure no new pods are scheduled. Then, use the `kubectl delete` command to delete the existing pods, which will trigger the creation of new ones from the deployment. Monitor the service and deployment to ensure they are healthy and meet the SLO of 99.95% uptime.",
+    "key_commands": [
+      "kubectl drain <node-name> --delete-emptydir-data --force",
+      "kubectl delete pod -l app=payment-service"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the service does not recover within 30 minutes, it will be considered a P1 issue."
+  },
+  {
+    "qa_id": "FTF-QA-089",
+    "question": "What do I do when an EKS node is NotReady?",
+    "category": "kubernetes",
+    "answer": "When an EKS node is marked NotReady, first, check the node's status using `kubectl get nodes` to identify the node. Investigate the issue by running `kubectl describe node <node-name>` and `kubectl logs <pod-name> -n <namespace>` for any error messages. Address the underlying issue and then use `kubectl cordon <node-name>` followed by `kubectl drain <node-name> --force --grace-period=60 --ignore-daemonsets --delete-emptydir-data` to clean up the node. Ensure the node is rescheduled with `kubectl uncordon <node-name>` once resolved.",
+    "key_commands": [
+      "kubectl get nodes",
+      "kubectl describe node <node-name>",
+      "kubectl logs <pod-name> -n <namespace>",
+      "kubectl cordon <node-name>",
+      "kubectl drain <node-name> --force --grace-period=60 --ignore-daemonsets --delete-emptydir-data",
+      "kubectl uncordon <node-name>"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the node remains NotReady for more than 1 hour, it should be escalated to the SRE team as a P1 issue."
+  },
+  {
+    "qa_id": "FTF-QA-090",
+    "question": "How do I roll back a bad ArgoCD deployment?",
+    "category": "kubernetes",
+    "answer": "To rollback a bad ArgoCD deployment, you should first identify the problematic revision using `argocd app list` and then roll back to a previous known good revision with `argocd app rollback <app-name> --revision <revision-id>`. Ensure to test the rollback in a staging environment before performing it in production. Maintain a clear record of all changes and revisions in your GitOps workflow for traceability.",
+    "key_commands": [
+      "argocd app list",
+      "argocd app rollback payment-service --revision r12345"
+    ],
+    "related_runbook": "FTF-RB-002",
+    "escalation_threshold": "Service downtime exceeds 15 minutes or affects more than 10% of the daily transaction volume."
+  },
+  {
+    "qa_id": "FTF-QA-091",
+    "question": "How do I check etcd cluster health?",
+    "category": "kubernetes",
+    "answer": "To check the health of the etcd cluster, run the `etcdctl` command to query cluster members and their statuses. Use `kubectl` to target the namespace where the etcd service is deployed. Ensure all members are healthy and quorum is met. For example: `etcdctl member list --endpoints=https://<etcd-member-ip>:2379 --ca-file=/etc/etcd/certs/ca.pem --cert-file=/etc/etcd/certs/etcd.pem --key-file=/etc/etcd/certs/etcd-key.pem`. Monitor `etcd-cluster-health` service in Prometheus and Grafana dashboards for any degradation. Set up alerting in Prometheus to trigger notifications via PagerDuty if the health drops below 99.95% uptime.",
+    "key_commands": [
+      "etcdctl member list --endpoints=https://<etcd-member-ip>:2379 --ca-file=/etc/etcd/certs/ca.pem --cert-file=/etc/etcd/certs/etcd.pem --key-file=/etc/etcd/certs/etcd-key.pem",
+      "kubectl get pods -n etcd-namespace"
+    ],
+    "related_runbook": null,
+    "escalation_threshold": "etcd cluster health drops below 99.95% uptime, causing service disruptions"
+  },
+  {
+    "qa_id": "FTF-QA-092",
+    "question": "What is the HPA configuration for payment-service?",
+    "category": "kubernetes",
+    "answer": "The Horizontal Pod Autoscaler (HPA) for the payment-service is configured to automatically scale based on CPU utilization. The target CPU utilization is set to 50%, and the scale factor is set to 10 replicas. When the CPU utilization exceeds the target, the HPA will increase the number of replicas, and when it drops below a certain threshold, it will reduce the number of replicas accordingly.",
+    "key_commands": [
+      "kubectl autoscale deployment payment-service --cpu-percent=50 --min=2 --max=20 --policy-name=payment-service-hpa",
+      "kubectl get hpa payment-service"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the payment-service experiences a CPU utilization consistently above 70% for more than 10 minutes, it is escalated to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-093",
+    "question": "How do I cordon and drain an EKS node safely?",
+    "category": "kubernetes",
+    "answer": "To safely cordon and drain an EKS node at FinTechFlow, first ensure that all critical services such as payment-service and order-service are not running on the node. Use `kubectl cordon <node-name>` to prevent new pods from being scheduled on the node. Then, use `kubectl drain <node-name> --delete-local-data --force --grace-period=60 --timeout=300` to remove the pods. Monitor the process with `kubectl get pods --all-namespaces` and ensure no service disruptions occur.",
+    "key_commands": [
+      "kubectl cordon <node-name>",
+      "kubectl drain <node-name> --delete-local-data --force --grace-period=60 --timeout=300"
+    ],
+    "related_runbook": null,
+    "escalation_threshold": "If the cordon and drain process results in more than 5 minutes of downtime for any critical service, it should be escalated to the on-call team."
+  },
+  {
+    "qa_id": "FTF-QA-094",
+    "question": "How do I check pod resource limits and requests?",
+    "category": "kubernetes",
+    "answer": "To check the resource limits and requests for pods in Kubernetes, you can use `kubectl get pods -o wide` to list all pods with their resource requests and limits. For a more detailed view, use `kubectl describe pod <pod-name>` to inspect the resource configurations. Ensure that the `payment-service` pods are configured with appropriate limits and requests, aiming for efficient resource utilization while maintaining performance.",
+    "key_commands": [
+      "kubectl get pods -o wide",
+      "kubectl describe pod <pod-name>"
+    ],
+    "related_runbook": "FTF-RB-002",
+    "escalation_threshold": "If any pod consistently exceeds its resource limits, causing service degradation or downtime, this will be escalated to P1."
+  },
+  {
+    "qa_id": "FTF-QA-095",
+    "question": "What is the PodDisruptionBudget for payment-service?",
+    "category": "kubernetes",
+    "answer": "The PodDisruptionBudget for the payment-service is set to 1, ensuring that at least one pod is always running, which aligns with the 99.95% uptime SLO. To set this, the command `kubectl apply -f pod-disruption-budget.yaml` is used, where `pod-disruption-budget.yaml` contains the configuration `spec.maxUnavailable: 1`. This ensures that during any maintenance or scaling operations, at least one instance of the payment-service is always available, meeting the P1 MTTR target of 30 minutes.",
+    "key_commands": [
+      "kubectl apply -f pod-disruption-budget.yaml",
+      "kubectl get poddisruptionbudget pod-disruption-budget-name"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the payment-service experiences more than 5 minutes of downtime, it will be escalated to the P1 level due to the critical nature of the service."
+  },
+  {
+    "qa_id": "FTF-QA-096",
+    "question": "How do I debug an ImagePullBackOff error?",
+    "category": "kubernetes",
+    "answer": "An ImagePullBackOff error occurs when the Kubernetes cluster cannot pull the Docker image for a pod. First, check the pod events with `kubectl describe pod <pod-name>` to see if the issue is related to missing credentials or network problems. Ensure your `imagePullSecrets` are correctly configured and the image repository is accessible. If the issue persists, inspect the pod's logs with `kubectl logs <pod-name>` for more details.",
+    "key_commands": [
+      "kubectl describe pod <pod-name>",
+      "kubectl logs <pod-name>"
+    ],
+    "related_runbook": null,
+    "escalation_threshold": "If the ImagePullBackOff error affects the payment-service and lasts longer than 30 minutes, it would be escalated to P1."
+  },
+  {
+    "qa_id": "FTF-QA-097",
+    "question": "How do I check ArgoCD sync status?",
+    "category": "kubernetes",
+    "answer": "To check the sync status of ArgoCD, run the following command: `argocd app list` or `argocd app info <application-name>`. This will display the sync status, last sync time, and any error messages. Ensure that the sync status is marked as 'Synced' and the application is up to date.",
+    "key_commands": [
+      "argocd app list",
+      "argocd app info payment-service"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the sync status is 'Not Synced' for more than 15 minutes or if there are critical errors, this is considered a P1 issue and should be escalated immediately."
+  },
+  {
+    "qa_id": "FTF-QA-098",
+    "question": "What is the EKS cluster autoscaler configuration?",
+    "category": "kubernetes",
+    "answer": "The EKS cluster autoscaler at FinTechFlow is configured to ensure that the number of worker nodes is adjusted based on the CPU utilization of the services. Specifically, the autoscaler watches the `payment-service` and `transaction-processor` services, setting a target average CPU utilization threshold of 50%. When the average CPU utilization exceeds this threshold, the autoscaler adds a new worker node to the cluster. Conversely, if the average CPU utilization is below 20%, the autoscaler removes a worker node to optimize resource usage. This configuration helps maintain the 99.95% uptime SLO for the payment-service and ensures P1 MTTR targets are met.",
+    "key_commands": [
+      "eksctl get cluster autoscaler --cluster <cluster-name>",
+      "kubectl get hpa -n <namespace>"
+    ],
+    "related_runbook": "FTF-RB-101",
+    "escalation_threshold": "If the EKS cluster autoscaler fails to scale the cluster within 10 minutes of a CPU utilization spike exceeding 70%, it will be escalated to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-099",
+    "question": "How do I check Kubernetes network policies for payment pods?",
+    "category": "kubernetes",
+    "answer": "To check network policies for payment pods in Kubernetes, you can use `kubectl get networkpolicies` to list all network policies. For specific payment pods, use `kubectl get networkpolicies -o json | jq '.items[] | select(.metadata.name | contains(\"payment\"))'` to filter policies related to the payment service. Review the `spec` section to understand the ingress and egress rules applied to the payment pods.",
+    "key_commands": [
+      "kubectl get networkpolicies",
+      "kubectl get networkpolicies -o json | jq '.items[] | select(.metadata.name | contains(\"payment\"))"
+    ],
+    "related_runbook": null,
+    "escalation_threshold": "If network policies for payment pods are misconfigured and lead to service downtime exceeding 15 minutes, this will be escalated to a P1 issue."
+  },
+  {
+    "qa_id": "FTF-QA-100",
+    "question": "How do I force delete a stuck terminating pod?",
+    "category": "kubernetes",
+    "answer": "To force delete a stuck terminating pod in Kubernetes, you can use the `kubectl delete` command with the `--grace-period=0` flag. For example, to delete a pod named `payment-service-65b7b7b7b7-12345`, run `kubectl delete pod payment-service-65b7b7b7b7-12345 --grace-period=0`. However, be cautious as this will terminate the pod immediately without allowing it to shut down gracefully. Ensure that no critical operations are being performed by the pod before proceeding. If the pod is part of a stateful set, force deletion may disrupt the service, so consult the relevant runbook before taking action.",
+    "key_commands": [
+      "kubectl delete pod payment-service-65b7b7b7b7-12345 --grace-period=0"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If a pod is stuck in a terminating state for more than 15 minutes and is part of a critical service like the payment-service, it should be escalated to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-101",
+    "question": "What is the readiness probe configuration for payment-service?",
+    "category": "kubernetes",
+    "answer": "The readiness probe for payment-service is configured to check the liveness of the service by running a specific HTTP GET request to the /health endpoint every 10 seconds with a timeout of 1 second and a failure threshold of 3. If the probe fails, the container is considered not ready and the service will be removed from the load balancer until it passes the probe again.",
+    "key_commands": [
+      "kubectl describe pod <payment-service-pod-name>",
+      "kubectl get pod <payment-service-pod-name> -o jsonpath='{.spec.containers[0].readinessProbe.httpGet.path}'"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the readiness probe fails for 10 consecutive checks, it is escalated to a P1 incident due to potential service unavailability impacting 99.95% uptime SLO."
+  },
+  {
+    "qa_id": "FTF-QA-102",
+    "question": "How do I check EKS control plane logs?",
+    "category": "kubernetes",
+    "answer": "To check EKS control plane logs, you can use the `aws-eks` command-line tools or the AWS Management Console. For CLI access, run `aws eks describe-cluster --name <cluster-name> --query cluster.logging.clusterLogging[].enabled` to verify if logging is enabled. If enabled, use `aws logs filter-log-events --log-group-name /aws/eks/<cluster-name> --start-time <timestamp>` to filter and view logs. For more detailed logs, consider using CloudWatch Logs Insights with a query like `fields @timestamp, @message | sort @timestamp desc | limit 100`.",
+    "key_commands": [
+      "aws eks describe-cluster --name <cluster-name> --query cluster.logging.clusterLogging[].enabled",
+      "aws logs filter-log-events --log-group-name /aws/eks/<cluster-name> --start-time <timestamp>"
+    ],
+    "related_runbook": "FTF-RB-04",
+    "escalation_threshold": "If the control plane logs indicate issues that are not resolved within 30 minutes, escalate to the SRE on call."
+  },
+  {
+    "qa_id": "FTF-QA-103",
+    "question": "How do I increase pod memory limit temporarily?",
+    "category": "kubernetes",
+    "answer": "To temporarily increase the pod memory limit in Kubernetes, you can use the `kubectl edit` command to modify the deployment or statefulset manifest. For example, to increase the memory limit of the `payment-service` pod, you can run `kubectl edit deployment payment-service` and then adjust the `resources.limits.memory` field. Ensure the new limit is within the acceptable thresholds to avoid impacting other services. Monitor the service closely for any anomalies and revert the changes once the issue is resolved.",
+    "key_commands": [
+      "kubectl edit deployment payment-service",
+      "kubectl edit statefulset transaction-processor"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the memory increase causes the pod to crash or restart repeatedly, or if it impacts the 99.95% uptime SLO for the payment-service, it should be escalated to P1."
+  },
+  {
+    "qa_id": "FTF-QA-104",
+    "question": "What is the namespace structure at FinTechFlow?",
+    "category": "kubernetes",
+    "answer": "At FinTechFlow, the namespace structure is organized to separate development, staging, and production environments. Each environment has its own namespace: `dev`, `staging`, and `prod`. The `default` namespace is reserved for Kubernetes system resources. The `production` namespace, `prod`, is where the critical services like `payment-service`, `transaction-processor`, and `fraud-detection-service` are deployed. ArgoCD is used to manage the deployment across these namespaces, ensuring consistency and smooth rollouts.",
+    "key_commands": [
+      "kubectl get namespaces",
+      "kubectl config set-context --current --namespace=prod"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the MTTR for the `payment-service` exceeds 30 minutes, it is escalated to a P1 priority."
+  },
+  {
+    "qa_id": "FTF-QA-105",
+    "question": "How do I check Kubernetes events for a deployment?",
+    "category": "kubernetes",
+    "answer": "To check Kubernetes events for a deployment, you can use the `kubectl get events` command with the `-w` flag to watch for new events. For a specific deployment, use `kubectl get events --field-selector involved-object.kind=Deployment,involved-object.name=<deployment-name>` to filter by the deployment name. Ensure you are monitoring the events closely, especially during critical operations, to meet the 99.95% uptime SLO.",
+    "key_commands": [
+      "kubectl get events -w",
+      "kubectl get events --field-selector involved-object.kind=Deployment,involved-object.name=payment-service"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If more than 10 events related to the deployment are observed in a 10-minute window, it should be escalated to the on-call team."
+  },
+  {
+    "qa_id": "FTF-QA-106",
+    "question": "How do I view ArgoCD deployment history?",
+    "category": "kubernetes",
+    "answer": "To view the deployment history in ArgoCD, you can use the CLI command `argocd app list` to see all applications, and then use `argocd app log <application-name>` to view the logs and changes. For more detailed history, you can run `argocd repo diff <application-name> <revision>` to compare specific revisions. Ensure you are logged into the correct context with `argocd login` before running these commands.",
+    "key_commands": [
+      "argocd app list",
+      "argocd app log <application-name>",
+      "argocd repo diff <application-name> <revision>"
+    ],
+    "related_runbook": "FTF-RB-XX",
+    "escalation_threshold": "If the deployment history shows any issues that are impacting the payment-service and the uptime SLO is at risk, this becomes a P1 issue."
+  },
+  {
+    "qa_id": "FTF-QA-107",
+    "question": "What is the node selector for payment workloads?",
+    "category": "kubernetes",
+    "answer": "The node selector for payment workloads at FinTechFlow ensures that the payment-service and its related services run on nodes with high availability and performance capabilities. The specific node selector is defined in the Kubernetes deployment YAML for the payment-service, targeting nodes with the label `environment: production` and `role: worker`. This ensures that the payment workloads are isolated from other non-critical services, maintaining the required 99.95% uptime SLO.",
+    "key_commands": [
+      "kubectl get nodes -l environment=production,role=worker",
+      "kubectl describe pod <payment-service-pod-name>"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the payment-service experiences more than 5 minutes of downtime, it is escalated to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-108",
+    "question": "How do I check cluster resource utilisation?",
+    "category": "kubernetes",
+    "answer": "To check cluster resource utilisation, you can use `kubectl top node` and `kubectl top pod` to monitor CPU and memory usage. Set thresholds in Prometheus and alert on metrics like `cpu_utilisation` and `memory_utilisation` for each service. Ensure that `payment-service` does not exceed 80% CPU and 70% memory to meet the 99.95% uptime SLO.",
+    "key_commands": [
+      "kubectl top node",
+      "kubectl top pod"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If `payment-service` exceeds 85% CPU or 80% memory, it triggers a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-109",
+    "question": "How do I debug a pod stuck in Init state?",
+    "category": "kubernetes",
+    "answer": "To debug a pod stuck in the Init state, first check the pod's logs using `kubectl logs <pod-name> --tail=100` to identify the issue. Use `kubectl describe pod <pod-name>` to get more context about the pod's status. If the issue is related to a service dependency, verify the service's health with `kubectl get svc <service-name>` and check the service's logs if necessary.",
+    "key_commands": [
+      "kubectl logs <pod-name> --tail=100",
+      "kubectl describe pod <pod-name>",
+      "kubectl get svc <service-name>"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the pod remains stuck for more than 1 hour, it will be escalated to the SRE team for further investigation."
+  },
+  {
+    "qa_id": "FTF-QA-110",
+    "question": "What is the EKS version at FinTechFlow and upgrade policy?",
+    "category": "kubernetes",
+    "answer": "Refer to FinTechFlow kubernetes runbook.",
+    "key_commands": [],
+    "escalation_threshold": "P1 when service SLO breached"
+  },
+  {
+    "qa_id": "FTF-QA-111",
+    "question": "How do I unseal HashiCorp Vault at FinTechFlow?",
+    "category": "security",
+    "answer": "To unseal HashiCorp Vault at FinTechFlow, you need to have the unseal keys and the nonce. Execute the `unseal` command with the provided keys in the correct sequence. Ensure that all unseal keys are used and the nonce is valid. Failing to unseal the Vault within the threshold may result in data loss, so ensure you have the necessary permissions and keys.",
+    "key_commands": [
+      "vault operator unseal <key1>",
+      "vault operator unseal <key2>",
+      "vault operator unseal <key3>"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the Vault remains unsealed for more than 1 hour, it will be considered a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-112",
+    "question": "What do I do when AWS WAF blocks legitimate payments?",
+    "category": "security",
+    "answer": "First, review the AWS WAF logs to identify the rule causing the issue. Adjust or modify the WAF rules to ensure they do not mistakenly block legitimate transactions. Monitor the payment-service SLO and use Prometheus and Grafana for real-time alerts. If the issue persists, escalate to the SRE team via PagerDuty.",
+    "key_commands": [
+      "aws wafv2 get-web-acl --web-acl-arn arn:aws:wafv2:region:account-id:webacl/web-acl-name",
+      "kubectl edit deployment payment-service -n namespace"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the issue causes the payment-service to drop below 99.5% uptime for more than 15 minutes."
+  },
+  {
+    "qa_id": "FTF-QA-113",
+    "question": "How do I renew an expired SSL certificate in our stack?",
+    "category": "security",
+    "answer": "To renew an expired SSL certificate in FinTechFlow, you should first update the certificate in the respective service's configuration. For example, if the certificate is used by the payment-service, you need to replace the certificate file and update the configuration in the Kubernetes manifest. After updating, run `kubectl apply -f <manifest-file>.yaml` to apply the changes. Ensure that the new certificate is properly validated using tools like `openssl s_client -connect <domain>:443` to check the certificate details. Monitor the service for any errors and ensure the SLO of 99.95% uptime is maintained.",
+    "key_commands": [
+      "kubectl apply -f payment-service-certificate.yaml",
+      "openssl s_client -connect <domain>:443 -showcerts"
+    ],
+    "related_runbook": "FTF-RB-04",
+    "escalation_threshold": "If the renewed certificate fails to validate or causes service downtime exceeding 15 minutes, it should be escalated to the SRE team."
+  },
+  {
+    "qa_id": "FTF-QA-114",
+    "question": "What is the Vault token TTL for payment-service?",
+    "category": "security",
+    "answer": "The Vault token TTL for the payment-service is set to 15 minutes. This configuration ensures that tokens are refreshed regularly to maintain security and compliance. To verify this, use the command `vault token lookup <token_id>`. If a token has not been refreshed within 15 minutes, it will be automatically revoked. This TTL aligns with our P1 MTTR target of 30 minutes, ensuring that any token-related issues can be resolved within the expected service recovery time.",
+    "key_commands": [
+      "vault token lookup <token_id>",
+      "vault write sys/mounts/payment-service/role/my-role token_ttl=\"15m\" max_token_ttl=\"15m\""
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If a token-related issue leads to a service downtime exceeding 15 minutes, it will be escalated to P1 status."
+  },
+  {
+    "qa_id": "FTF-QA-115",
+    "question": "How do I check AWS IAM AccessDenied root cause?",
+    "category": "security",
+    "answer": "To diagnose and resolve an AccessDenied error in AWS IAM, first, use the AWS CLI command `aws sts get-caller-identity` to verify the identity of the user or role that is encountering the issue. Additionally, review the CloudTrail logs using `aws cloudtrail describe-trails --query 'trailList[*].Name' --output text` to identify the exact API call causing the AccessDenied. Ensure that the IAM policy associated with the user or role includes the necessary permissions.",
+    "key_commands": [
+      "aws sts get-caller-identity",
+      "aws cloudtrail describe-trails --query 'trailList[*].Name' --output text"
+    ],
+    "related_runbook": null,
+    "escalation_threshold": "If the AccessDenied error persists for more than 30 minutes and affects the payment-service, it should be escalated to P1."
+  },
+  {
+    "qa_id": "FTF-QA-116",
+    "question": "How do I rotate API keys for payment-gateway integration?",
+    "category": "security",
+    "answer": "To rotate API keys for payment-gateway integration, first, update the API key in the payment-service and transaction-processor services. Use the ArgoCD command `argocd app update <app-name>` to push the updated configuration to the Kubernetes cluster. Monitor the service with Prometheus and Grafana to ensure smooth transition. If the service downtime exceeds 10 minutes, it will be escalated to a P1 issue.",
+    "key_commands": [
+      "argocd app update payment-service",
+      "argocd app update transaction-processor"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the service downtime exceeds 10 minutes, it will be escalated to a P1 issue."
+  },
+  {
+    "qa_id": "FTF-QA-117",
+    "question": "What is the mTLS configuration between FinTechFlow services?",
+    "category": "security",
+    "answer": "FinTechFlow implements mutual TLS (mTLS) between all services to ensure secure communication. Each service is configured to authenticate both the client and server during communication. The mTLS certificates are managed through HashiCorp Vault. The payment-service, order-service, transaction-processor, fraud-detection-service, and notification-service use mTLS for internal communication. The merchant-api uses client authentication only. The configuration includes setting up TLS termination on the Kubernetes ingress and enabling mTLS in the Kubernetes cluster using Calico network policies.",
+    "key_commands": [
+      "kubectl apply -f https://<vault-url>/v1/secret/data/tls-certs/payment-service-tls -n <namespace>",
+      "calicoctl policy add -l app=payment-service -l app=order-service --inbound --priority=1000 --apply"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the mTLS certificate for the payment-service expires or is compromised, it will trigger a P1 incident due to the critical nature of the service and the potential impact on customer transactions."
+  },
+  {
+    "qa_id": "FTF-QA-118",
+    "question": "How do I check Vault audit logs for access issues?",
+    "category": "security",
+    "answer": "To check Vault audit logs for access issues, you can use the `vault audit list` command to identify the active audit devices, followed by `vault audit read <device>` to view the logs. Look for any unauthorized access attempts or excessive access patterns. Monitor for P1 events or suspicious behavior that could indicate a security breach.",
+    "key_commands": [
+      "vault audit list",
+      "vault audit read file"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "Detection of unauthorized access attempts or more than 10 suspicious log entries within a 5-minute window"
+  },
+  {
+    "qa_id": "FTF-QA-119",
+    "question": "How do I temporarily disable a WAF rule safely?",
+    "category": "security",
+    "answer": "To temporarily disable a WAF rule safely at FinTechFlow, first ensure the rule is not critical for the service's operation. Use the AWS WAF console or AWS CLI to disable the rule for a short period. Monitor the service's health using Prometheus and Grafana. If issues arise, revert the change immediately. Always document the disabled rule and the duration of the change.",
+    "key_commands": [
+      "aws wafv2 update-web-acl --name payment-service-waf --region us-west-2 --change-commands '[{\"Action\":\"DISABLE\",\"RuleArn\":\"<rule-arn>\",\"Priority\":1}]'",
+      "kubectl get svc payment-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}'"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the payment-service experiences more than 5 errors per minute for 10 minutes during the WAF rule disablement, it should be escalated to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-120",
+    "question": "What is the AWS KMS key rotation schedule?",
+    "category": "security",
+    "answer": "At FinTechFlow, we ensure that AWS KMS keys are rotated every 90 days to maintain the highest level of security. This process is automated using AWS CloudFormation templates and scheduled via CloudWatch events. The rotation is managed through the AWS Management Console and the AWS CLI commands `aws kms rotate-key-material --key-id <key-id>` and `aws kms generate-random --key-id <key-id>`. Proper key rotation ensures that the encryption keys used for sensitive data are refreshed regularly, minimizing the risk of key compromise.",
+    "key_commands": [
+      "aws kms rotate-key-material --key-id <key-id>",
+      "aws kms generate-random --key-id <key-id>"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the key rotation process fails to complete within 24 hours, it will be escalated to the SRE team as a P1 issue due to the critical nature of maintaining secure data encryption."
+  },
+  {
+    "qa_id": "FTF-QA-121",
+    "question": "How do I check Cloudflare firewall event logs?",
+    "category": "security",
+    "answer": "To check Cloudflare firewall event logs, you can use the Cloudflare API to query the Firewall Logs. Navigate to the Cloudflare dashboard, go to the Firewall section, and select Logs. You can also use the Cloudflare API with specific queries to filter and retrieve logs. For example, you can use the API to query logs for a specific time period or filter by action type.",
+    "key_commands": [
+      "curl -X GET \"https://api.cloudflare.com/client/v4/wrappers/firewall/logs?start=2023-10-01T00:00:00Z&end=2023-10-02T00:00:00Z&match=logs&per_page=100\" -H \"Authorization: Bearer YOUR_API_TOKEN\"",
+      "cloudflare firewall logs list --start 2023-10-01T00:00:00Z --end 2023-10-02T00:00:00Z --match logs --limit 100"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the firewall logs show more than 1000 suspicious events in a 1-hour period, it will be escalated to the incident response team."
+  },
+  {
+    "qa_id": "FTF-QA-122",
+    "question": "What is the AWS Secrets Manager rotation procedure?",
+    "category": "security",
+    "answer": "AWS Secrets Manager automatically rotates secrets according to the configured rotation schedule. For FinTechFlow, this process involves using the AWS Secrets Manager console or AWS CLI to configure the rotation. The default rotation period is 90 days, but this can be adjusted. A successful rotation involves updating the secrets in the relevant services, such as the payment-service and order-service, to use the new secret.",
+    "key_commands": [
+      "aws secretsmanager rotate-secret --secret-id <SECRET_NAME>",
+      "aws secretsmanager get-secret-value --secret-id <SECRET_NAME> --version-stage AWSCURRENT"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If a rotation fails more than 3 times in a week, it is escalated to a P1 issue."
+  },
+  {
+    "qa_id": "FTF-QA-123",
+    "question": "How do I verify Vault is fully operational after unseal?",
+    "category": "security",
+    "answer": "To verify Vault is fully operational after unseal, ensure that the Vault service is up and running, and all secrets are accessible. Run `vault status` to check the unseal status and ensure the system is initialized. Verify that the `payment-service` and `notification-service` can access the necessary secrets by attempting to retrieve them using `vault read -field=value path/to/secrets`.",
+    "key_commands": [
+      "vault status",
+      "vault read -field=value path/to/secrets"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the Vault service remains unresponsive for more than 15 minutes after unseal, it will be escalated to P1."
+  },
+  {
+    "qa_id": "FTF-QA-124",
+    "question": "What is the IAM role for payment-service?",
+    "category": "security",
+    "answer": "The IAM role for the payment-service is named `payment-service-role` and it has been configured to have the necessary permissions to interact with other services such as PostgreSQL, Redis, and Kafka. This role is managed via GitHub Actions and ArgoCD for continuous deployment. The role ensures that the service can perform its tasks securely while adhering to the principle of least privilege.",
+    "key_commands": [
+      "aws iam get-role --role-name payment-service-role",
+      "kubectl get rolebinding -n payment-service payment-service-role"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the IAM role for the payment-service is compromised or if the role permissions are misconfigured, leading to a breach of security or unauthorized access to sensitive data, this will be escalated to P1."
+  },
+  {
+    "qa_id": "FTF-QA-125",
+    "question": "How do I rotate database credentials in Vault?",
+    "category": "security",
+    "answer": "To rotate database credentials in Vault, use the `vault write` command to create a new version of the credentials. For FinTechFlow, ensure the `payment-service` is updated to use the new credentials within 5 minutes to meet the P1 MTTR target.",
+    "key_commands": [
+      "vault write transit/encryption-key/rotate payment-service",
+      "vault write kv-v2/pki/issue/payment-service role=payment-service-role"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the rotation process exceeds 30 minutes, it will be escalated to the on-call SRE team."
+  },
+  {
+    "qa_id": "FTF-QA-126",
+    "question": "What is the certificate authority for FinTechFlow mTLS?",
+    "category": "security",
+    "answer": "FinTechFlow uses Let's Encrypt as the certificate authority for its mTLS certificates. These certificates are generated and managed by the Let's Encrypt client and are installed on Kubernetes nodes and services using the `cert-manager` operator. The certificates are automatically renewed every 90 days to ensure continuous service availability without manual intervention.",
+    "key_commands": [
+      "kubectl get issuers.cert-manager.io -n cert-manager",
+      "kubectl get certificates.cert-manager.io -n cert-manager"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the Let's Encrypt certificate expires and is not renewed within 48 hours, it will be escalated to a P1 incident due to the critical nature of mTLS for ensuring secure communication between services."
+  },
+  {
+    "qa_id": "FTF-QA-127",
+    "question": "How do I check for expired certificates across all services?",
+    "category": "security",
+    "answer": "To ensure the security of your services, you should regularly check for expired certificates. Use `openssl x509 -noout -enddate -in <certificate_path>` to check the expiration date of the certificates. For example, to check the certificate of the payment-service, run `openssl x509 -noout -enddate -in /etc/ssl/certs/payment-service.crt`. Additionally, set up alerts in Prometheus and Grafana to notify you of any certificates that are within 30 days of expiration.",
+    "key_commands": [
+      "openssl x509 -noout -enddate -in /etc/ssl/certs/payment-service.crt",
+      "Prometheus query: cert_expiration_time < timestamp - 30d"
+    ],
+    "related_runbook": "FTF-RB-007",
+    "escalation_threshold": "If any certificate expiration is detected within the next 30 days, it will be escalated to a P1 issue."
+  },
+  {
+    "qa_id": "FTF-QA-128",
+    "question": "What is the Cloudflare zone ID for fintechflow.io?",
+    "category": "security",
+    "answer": "The Cloudflare zone ID for fintechflow.io is `1234567890abcdef1234567890abcdef`. Ensure this ID is securely stored and only accessible to authorized personnel. Regularly review Cloudflare logs and access controls to maintain security.",
+    "key_commands": [
+      "cfzonelist --account-id <your_account_id>",
+      "cfzoneinfo <your_zone_id>"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the Cloudflare zone ID is compromised or lost, it will result in immediate P1 incident due to potential domain hijacking and service disruption."
+  },
+  {
+    "qa_id": "FTF-QA-129",
+    "question": "How do I add a WAF whitelist rule for a merchant IP?",
+    "category": "security",
+    "answer": "To add a WAF whitelist rule for a merchant IP, you need to update the security group or network ACLs associated with the load balancer. Ensure the merchant IP is added to the inbound rules to allow traffic. For example, use the AWS Management Console or AWS CLI to add the IP to the security group. Monitor the changes using Prometheus and Grafana to ensure the rule is applied correctly.",
+    "key_commands": [
+      "aws ec2 authorize-security-group-inbound --group-id <security_group_id> --ip-permissions IpProtocol=tcp,FromPort=80,ToPort=80,CidrIp=<merchant_ip>/32",
+      "aws ec2 describe-security-groups --group-ids <security_group_id>"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the whitelist rule is not applied within 15 minutes, it will be escalated to a P1 issue."
+  },
+  {
+    "qa_id": "FTF-QA-130",
+    "question": "What is the procedure for a suspected security breach?",
+    "category": "security",
+    "answer": "Upon a suspected security breach, the incident response team should immediately initiate the incident response plan. This includes stopping the affected services, isolating them from the network, and initiating a forensic investigation to identify the source and scope of the breach. The payment-service and fraud-detection-service should be closely monitored for any unusual activity. Specific commands such as `kubectl get pods` and `kubectl describe pod <pod_name>` should be run to check the status of the services. If the breach is confirmed, the incident should be escalated to the P1 level based on the volume of transactions impacted.",
+    "key_commands": [
+      "kubectl get pods -n <namespace>",
+      "kubectl describe pod <pod_name> -n <namespace>"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the breach affects more than 100,000 transactions in a 1-hour window."
+  },
+  {
+    "qa_id": "FTF-QA-131",
+    "question": "How do I silence a PagerDuty alert without missing real alerts?",
+    "category": "monitoring",
+    "answer": "To silence a PagerDuty alert without missing real alerts, first, identify the root cause of the alert. Use Prometheus and Grafana to check the metrics related to the service, such as the payment-service. Run `prometheus\u67e5\u670d\u52a1\u540d_instance\u7684\u6307\u6807` to check the real-time metrics. If it\u2019s a known false positive, you can silence the alert by navigating to the incident in PagerDuty, clicking on the alert rule, and selecting 'Silence'. For P1 incidents, ensure the threshold is met, such as 99.95% uptime for the payment-service, and only silence the alert if the service has returned to normal. Always document the reason for silencing the alert in PagerDuty.",
+    "key_commands": [
+      "prometheus payment-service_instance_name_metric_name",
+      "pagerduty incident alert rule silence"
+    ],
+    "related_runbook": "FTF-RB-03",
+    "escalation_threshold": "If the payment-service uptime falls below 99.92% for more than 15 minutes, this incident escalates to P1."
+  },
+  {
+    "qa_id": "FTF-QA-132",
+    "question": "What Prometheus queries show payment service health?",
+    "category": "monitoring",
+    "answer": "To monitor the health of the payment service, key metrics include request latency and error rates. Use the following PromQL queries: `histogram_quantile(0.95, sum(rate(payment_service_request_duration_bucket[5m])) by (le))` to check the 95th percentile latency and `rate(payment_service_requests_total[5m])` to monitor the number of requests. Set thresholds in Prometheus alerts to trigger at 100ms latency and 5% error rate.",
+    "key_commands": [
+      "prometheus query: histogram_quantile(0.95, sum(rate(payment_service_request_duration_bucket[5m])) by (le))",
+      "prometheus query: rate(payment_service_requests_total[5m])"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "P1 escalation if 95th percentile latency exceeds 200ms for more than 5 minutes or error rate exceeds 10% for more than 10 minutes"
+  },
+  {
+    "qa_id": "FTF-QA-133",
+    "question": "How do I check if Prometheus is scraping payment-service metrics?",
+    "category": "monitoring",
+    "answer": "Refer to FinTechFlow monitoring runbook.",
+    "key_commands": [],
+    "escalation_threshold": "P1 when service SLO breached"
+  },
+  {
+    "qa_id": "FTF-QA-134",
+    "question": "What Grafana dashboard shows the payment service SLO?",
+    "category": "monitoring",
+    "answer": "The Grafana dashboard named 'Payment Service SLO' displays the uptime percentage for the payment-service, which is critical for meeting the 99.95% SLO target. It includes real-time alerts and historical data. To access it, navigate to the 'Monitoring' folder in Grafana, then select the 'Payment Service SLO' dashboard.",
+    "key_commands": [
+      "grafana-cli dashboards import <dashboard_id> --folder <folder_id>",
+      "grafana-cli dashboards export <dashboard_id> --folder <folder_id>"
+    ],
+    "related_runbook": null,
+    "escalation_threshold": "If the payment-service uptime drops below 99.5% for more than 15 minutes, it triggers a P1 escalation."
+  },
+  {
+    "qa_id": "FTF-QA-135",
+    "question": "How do I create a new Prometheus alert rule?",
+    "category": "monitoring",
+    "answer": "To create a new alert rule in Prometheus for FinTechFlow, define a new rule file, for example, `payment-service-alerts.rules`. Set the alert thresholds and labels specific to the payment-service, such as the CPU usage or request latency exceeding 90% for more than 5 minutes. Use the Grafana Prom Alert dashboard as a reference for setting up your alerting rules. Ensure the rule is added to the Prometheus configuration and the service is restarted to apply the changes.",
+    "key_commands": [
+      "vi /etc/prometheus/rules/payment-service-alerts.rules",
+      "promtool check rules /etc/prometheus/rules/payment-service-alerts.rules",
+      "systemctl restart prometheus"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the payment-service CPU usage exceeds 80% for more than 10 minutes, it escalates to P1."
+  },
+  {
+    "qa_id": "FTF-QA-136",
+    "question": "What is the Alert Manager routing configuration?",
+    "category": "monitoring",
+    "answer": "The Alert Manager routing configuration in FinTechFlow is designed to route alerts based on the severity and the service affected. For instance, critical alerts for the payment-service, which has a 99.95% uptime SLO, are routed to the on-call engineer within 5 minutes. The configuration uses specific label matches to direct alerts to the appropriate team and escalation paths. For example, alerts labeled with 'payment-service' and 'critical' are routed to the SRE team via PagerDuty. Detailed configurations are found in the Alert Manager's YAML file.",
+    "key_commands": [
+      "kubectl -n monitoring get alertmanager-main -o yaml | grep route",
+      "cat /etc/alertmanager/alertmanager.yml | grep route"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the payment-service experiences more than 10 minutes of downtime, it triggers a P1 escalation."
+  },
+  {
+    "qa_id": "FTF-QA-137",
+    "question": "How do I check Jaeger traces for slow transactions?",
+    "category": "monitoring",
+    "answer": "To check Jaeger traces for slow transactions in FinTechFlow, you can use the `jaeger query` command to query the traces based on the service name and operation name. For example, to find slow transactions in the `payment-service`, run `jaeger query --service payment-service --operation-name process-payment --duration 30m`. Set a threshold for the duration of the transaction, such as 500ms, to identify slow transactions.",
+    "key_commands": [
+      "jaeger query --service payment-service --operation-name process-payment --duration 30m",
+      "jaeger query --service transaction-processor --operation-name process-transaction --duration 30m"
+    ],
+    "related_runbook": "FTF-RB-005",
+    "escalation_threshold": "A transaction duration exceeding 1 second for more than 10 minutes in the `payment-service`"
+  },
+  {
+    "qa_id": "FTF-QA-138",
+    "question": "How do I verify Grafana is showing real-time data?",
+    "category": "monitoring",
+    "answer": "To verify that Grafana is showing real-time data, check that the data source is correctly configured to scrape metrics from Prometheus at intervals no greater than 15 seconds. Ensure that the Grafana dashboard is updated within this interval. Monitor the `prometheus_http_request_duration` metric to confirm sub-second response times from Prometheus. The `payment-service` should have a healthy status in Grafana with no critical alerts.",
+    "key_commands": [
+      "curl -X GET 'http://prometheus:9090/api/v1/query?query=up' | grep -q true",
+      "curl -X GET 'http://grafana:3000/api/ds/inventory' | jq '.[].name' | grep 'prometheus'"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If Grafana fails to refresh the dashboard within 5 minutes of a change in the `payment-service` SLO data, it should be escalated to a P1 issue."
+  },
+  {
+    "qa_id": "FTF-QA-139",
+    "question": "What is the Prometheus retention period at FinTechFlow?",
+    "category": "monitoring",
+    "answer": "At FinTechFlow, the Prometheus retention period is set to 30 days to ensure that historical data is available for detailed analysis and long-term trending. The relevant commands to check this setting are: `prometheus_retention\u9f84\u671f\u67e5\u8be2\u547d\u4ee4` and `prometheus_server_status` with the flag `--web.retention-age`. This setting supports our SLO of 99.95% uptime for the payment-service by providing sufficient data for troubleshooting and monitoring purposes.",
+    "key_commands": [
+      "prometheus_retention\u9f84\u671f\u67e5\u8be2\u547d\u4ee4 --web.retention-age",
+      "prometheus_server_status --web.retention-age"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the Prometheus retention period falls below 28 days, it will trigger a P1 escalation in our incident management system, as this could impact our ability to diagnose issues effectively."
+  },
+  {
+    "qa_id": "FTF-QA-140",
+    "question": "How do I check OpenTelemetry collector status?",
+    "category": "monitoring",
+    "answer": "To check the status of the OpenTelemetry collector, you can use the Prometheus query `up{job=\"otlp-collector\"}` in Grafana or directly via the Prometheus HTTP API. Ensure the collector service is running and responsive, with no downtime. Monitor the collector's latency and error rates using Prometheus metrics and Grafana dashboards.",
+    "key_commands": [
+      "curl http://<collector-service-ip>:9443/metrics | grep up{job=\"otlp-collector\"",
+      "prometheus_query='up{job=\"otlp-collector\"}' in Grafana"
+    ],
+    "related_runbook": "FTF-RB-007",
+    "escalation_threshold": "Collector downtime exceeds 15 minutes or critical error rate exceeds 5% for 5 consecutive minutes"
+  },
+  {
+    "qa_id": "FTF-QA-141",
+    "question": "What are the SLO burn rate alert thresholds?",
+    "category": "monitoring",
+    "answer": "The SLO burn rate alert thresholds for the payment-service at FinTechFlow are set to trigger alerts when the burn rate exceeds 0.05% over a 15-minute window. This ensures that any deviation from the 99.95% uptime SLO is detected and addressed promptly. Specific commands such as `prometheus alertmanager api` can be used to monitor and trigger alerts based on these thresholds.",
+    "key_commands": [
+      "prometheus alertmanager api --query 'alertmanager/api/v1/alerts?state=active'",
+      "prometheus query --query 'rate(payment_service_down{job=\"payment-service\"}[15m]) > 0.0005'"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the burn rate exceeds 0.1% over a 15-minute window, this is escalated to a P1 issue and the incident response team is immediately notified."
+  },
+  {
+    "qa_id": "FTF-QA-142",
+    "question": "How do I set up a temporary alert for an incident?",
+    "category": "monitoring",
+    "answer": "To set up a temporary alert for an incident, you can use the Prometheus alertmanager. For example, to alert on a 99.95% uptime threshold breach for the payment-service, you can use the following command: `alertmanager --alertmanager.url=http://alertmanager:9093 --alertmanager.sendResolvedAlerts=true --alertmanager.alertsFile=/path/to/payment-service-alerts.yaml`. Ensure the alerting rules are set to temporary by adjusting the `for` duration in the Prometheus rules file.",
+    "key_commands": [
+      "alertmanager --alertmanager.url=http://alertmanager:9093 --alertmanager.sendResolvedAlerts=true --alertmanager.alertsFile=/path/to/payment-service-alerts.yaml",
+      "vi /path/to/payment-service-prometheus-rules.yml"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the payment-service uptime drops below 99.90% for more than 5 minutes, it escalates to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-143",
+    "question": "How do I check Loki log pipeline health?",
+    "category": "monitoring",
+    "answer": "To check the health of the Loki log pipeline, ensure that the Loki server is receiving data from the configured exporters and that the retention period is within the desired limits. Monitor the `loki_http_request_duration_seconds` metric and ensure it stays below 100ms. Review the `loki_request_size_bytes` and `loki_response_size_bytes` metrics to ensure they are within expected ranges. Any issues should be addressed within 30 minutes to meet the P1 MTTR target.",
+    "key_commands": [
+      "prometheus_query --query='loki_http_request_duration_seconds{job=\"loki\"} > 100ms'",
+      "prometheus_query --query='loki_request_size_bytes{job=\"loki\"} > 10MB'"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If `loki_http_request_duration_seconds` exceeds 100ms for more than 5 minutes, it is considered a P1 issue at FinTechFlow."
+  },
+  {
+    "qa_id": "FTF-QA-144",
+    "question": "What is the Grafana oncall escalation chain?",
+    "category": "monitoring",
+    "answer": "In the event of a Grafana alert, the oncall engineer will first review the alert in Grafana and check the related Prometheus metrics. If the issue persists, the oncall engineer will escalate to the SRE team lead, who will coordinate with the relevant service owners, such as the payment-service and transaction-processor teams, to resolve the issue. The escalation to the senior management will occur if the issue is not resolved within 30 minutes.",
+    "key_commands": [
+      "grafana alert list --status open",
+      "prometheus query 'payment_service_uptime{job=\"payment-service\"}'"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the Grafana alert for payment-service uptime is not resolved within 30 minutes, it will be escalated to P1."
+  },
+  {
+    "qa_id": "FTF-QA-145",
+    "question": "How do I check Prometheus TSDB health?",
+    "category": "monitoring",
+    "answer": "To check the health of Prometheus TSDB, you can run `prometheus\u67e5\u5e93` to ensure the database is functioning correctly. Monitor the `tsdb_heap_usage_bytes` and `tsdb_block_load_bytes` metrics to ensure they remain within acceptable thresholds. Ensure the `payment-service` and `transaction-processor` services are aligned with the 99.95% uptime SLO and P1 MTTR target.",
+    "key_commands": [
+      "prometheus --web.console.templates=/etc/prometheus/consoles --web.console.libraries=/etc/prometheus/console_libraries",
+      "prometheus remote-store tsdb status"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If `tsdb_heap_usage_bytes` exceeds 80% or `tsdb_block_load_bytes` consistently shows high values (over 100MB), it should be escalated to P1."
+  },
+  {
+    "qa_id": "FTF-QA-146",
+    "question": "How do I add a new Grafana dashboard panel?",
+    "category": "monitoring",
+    "answer": "To add a new Grafana dashboard panel, first, navigate to the Grafana UI and select the appropriate dashboard. Click the '+' icon to add a new panel. Choose the data source (e.g., Prometheus) and select the query to monitor, such as metrics from the payment-service. Adjust the panel settings as needed, setting thresholds and alerts if required. For FinTechFlow, ensure the panel reflects SLOs and P1 MTTR targets.",
+    "key_commands": [
+      "grafana-cli dash add <dashboard-id> <panel-json-file>",
+      "grafana-cli dash delete <dashboard-id> <panel-id>"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the new panel does not meet the SLO of 99.95% uptime for the payment-service, it becomes a P1 issue."
+  },
+  {
+    "qa_id": "FTF-QA-147",
+    "question": "What is the PagerDuty service ID for payment-service?",
+    "category": "monitoring",
+    "answer": "The PagerDuty service ID for the payment-service is PD-123456. This service is monitored for critical alerts that exceed the 99.95% uptime SLA, and the team follows a P1 MTTR target of 30 minutes. To check the current status, run `pd check-status PD-123456`.",
+    "key_commands": [
+      "pd check-status PD-123456"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the payment-service downtime exceeds 15 minutes, it is escalated to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-148",
+    "question": "How do I check metric cardinality in Prometheus?",
+    "category": "monitoring",
+    "answer": "To check metric cardinality in Prometheus, you can use the `cardinality` function in PromQL. For example, to check the cardinality of the `payment_service_requests_total` metric, you can run the query `cardinality(payment_service_requests_total)`. This will return the number of unique labels for the metric, which can help you understand the distribution of your metrics. If the cardinality is consistently high, it might indicate too many unique instances or labels, which could affect query performance.",
+    "key_commands": [
+      "promql cardinality(payment_service_requests_total)",
+      "promql cardinality(merchant_api_requests_total)"
+    ],
+    "related_runbook": "null",
+    "escalation_threshold": "If the cardinality of any critical metric exceeds 10,000 unique instances, it should be escalated to the SRE team as it could impact query performance and monitoring effectiveness."
+  },
+  {
+    "qa_id": "FTF-QA-149",
+    "question": "How do I correlate metrics and logs during an incident?",
+    "category": "monitoring",
+    "answer": "To correlate metrics and logs during an incident, start by querying Prometheus for metrics related to the payment-service, such as HTTP request latency and error rates. Use Grafana dashboards to visualize these metrics and cross-reference them with logs from ElasticSearch in Kibana. Look for patterns like high error rates or unusual latency spikes that align with specific log entries, such as 'payment processing failed' or 'timeout exceeded'.",
+    "key_commands": [
+      "prometheus query: --- query='http_request_duration_seconds_sum{job=\"payment-service\"}'",
+      "grafana dashboard URL: http://grafana.example.com/d/123-payment-service-dashboard?orgId=1"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "When the payment-service error rate exceeds 10% for 5 consecutive minutes."
+  },
+  {
+    "qa_id": "FTF-QA-150",
+    "question": "What are the top 5 dashboards every FTF SRE should know?",
+    "category": "monitoring",
+    "answer": "Every FTF SRE should know the following dashboards: 1) Payment Service Dashboard, which monitors the payment-service's 99.95% uptime and critical errors. 2) Kafka Dashboard, tracking the health and throughput of Kafka topics. 3) Redis Dashboard, ensuring cache performance and availability. 4) PostgreSQL Dashboard, monitoring database performance and health. 5) Alerting Dashboard, configured with PagerDuty and Grafana to notify on critical issues. These dashboards provide real-time visibility into critical services and help in maintaining system stability.",
+    "key_commands": [
+      "promctl list --job payment-service-uptime",
+      "kafka-topics.sh --describe --topic payment-topic"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the payment-service dashboard shows more than 5 critical errors in a 5-minute window, it escalates to P1."
+  },
+  {
+    "qa_id": "FTF-QA-151",
+    "question": "What is FinTechFlow error budget policy for payment-service?",
+    "category": "reliability",
+    "answer": "FinTechFlow reserves 0.05% of the monthly uptime budget for the payment-service to allow for controlled outages and development. This policy ensures that any necessary changes or deployments can be made without impacting the 99.95% SLO. The error budget is monitored using Prometheus and Grafana dashboards, and any issues are addressed within the P1 MTTR target of 30 minutes.",
+    "key_commands": [
+      "prometheus query: SELECT sum(rate(payment_service_error_count[1m])) BY (job) WHERE job='payment-service'",
+      "grafana dashboard ID: 12345 - Uptime and Error Budget Overview"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the payment-service error rate exceeds 0.1% for more than 1 hour, it will be escalated to a P1 priority."
+  },
+  {
+    "qa_id": "FTF-QA-152",
+    "question": "How do we calculate SLO for payment processing at FinTechFlow?",
+    "category": "reliability",
+    "answer": "To calculate the SLO for payment processing at FinTechFlow, we monitor the payment-service using Prometheus and Grafana. We define the availability threshold as 99.95%, which translates to no more than 4.32 minutes of downtime per month. If the payment-service deviates from this, we trigger alerts in PagerDuty. The exact command to check the availability is: `promql query: rate(payment_service_errors_total[1m]) * 100 < 99.95`. P1 MTTR target is 30 minutes, and any incident that exceeds this threshold is escalated immediately.",
+    "key_commands": [
+      "promctl alert list | grep payment_service_errors_total",
+      "grafana dashboard url: <http://grafana.fin-techflow.local/d/dashboard-name/payment-service-availability>"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the payment-service downtime exceeds 30 minutes, it is escalated to the P1 level."
+  },
+  {
+    "qa_id": "FTF-QA-153",
+    "question": "What is the MTTR target for P1 incidents?",
+    "category": "reliability",
+    "answer": "At FinTechFlow, the target for resolving P1 incidents is to have a maximum MTTR of 30 minutes. This is in line with our service level objective (SLO) for the payment-service, which requires 99.95% uptime. The incident response team is trained to follow the detailed procedures outlined in the FinTechFlow incident response runbook, FTF-RB-01, to ensure that any P1 incident is resolved within the specified timeframe.",
+    "key_commands": [
+      "kubectl get pods -n fin techflow",
+      "kubectl describe pod <pod-name> -n fin techflow"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "An incident is escalated to P1 if the payment-service experiences downtime that affects more than 1% of the daily transactions or causes financial losses exceeding $100,000 in a single hour."
+  },
+  {
+    "qa_id": "FTF-QA-154",
+    "question": "How do we measure toil at FinTechFlow?",
+    "category": "reliability",
+    "answer": "To measure toil at FinTechFlow, we monitor the operational overhead and maintenance activities. Key metrics include the frequency of deployments, incident response times, and the number of manual tasks. For instance, we track the number of times the `kubectl` command is used for deployment or maintenance (`kubectl get pods --all-namespaces`), and the duration of incidents using Prometheus and Grafana dashboards. The `argocd app list` command is also used to monitor the frequency of ArgoCD sync operations. We aim to reduce these metrics to improve efficiency and reliability.",
+    "key_commands": [
+      "kubectl get pods --all-namespaces",
+      "argocd app list",
+      "promtail -v"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the number of `kubectl` commands used for deployments exceeds 100 in a week, or if the P1 MTTR exceeds 30 minutes for three consecutive incidents, it triggers a P1 escalation."
+  },
+  {
+    "qa_id": "FTF-QA-155",
+    "question": "What is the capacity planning process for payment peaks?",
+    "category": "capacity",
+    "answer": "At FinTechFlow, the capacity planning process for payment peaks involves monitoring transaction rates and volume using Prometheus and Grafana. If the payment-service exceeds a 90% CPU utilization threshold, Kubernetes Horizontal Pod Autoscaler (HPA) triggers to scale up the deployment. The process also includes regular load testing with tools like JMeter and adjusting service configurations using ArgoCD.",
+    "key_commands": [
+      "kubectl autoscale deployment payment-service --min=2 --max=10 --cpu-percent=90",
+      "jmeter -n -t load_test_plan.jmx -l load_test_results.log"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the payment-service CPU utilization consistently exceeds 95% for more than 5 minutes, it triggers a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-156",
+    "question": "How do we forecast Kafka partition growth?",
+    "category": "capacity",
+    "answer": "To forecast Kafka partition growth at FinTechFlow, monitor the number of in-flight messages and the rate of new messages being produced. Use the `kafka-topics.sh` script with the `--describe` option to check the current partition count and replication factor. Regularly review the `kafka-producer` and `kafka-consumer` metrics in Prometheus and Grafana to identify trends. If the rate of new messages exceeds the processing capacity, consider increasing the partition count or optimizing the message processing in services like `payment-service` and `transaction-processor`.",
+    "key_commands": [
+      "kafka-topics.sh --describe --topic <topic-name>",
+      "kubectl top pod -n <namespace>"
+    ],
+    "related_runbook": "FTF-RB-001",
+    "escalation_threshold": "If the Kafka broker CPU utilization exceeds 80% for more than 15 minutes, or if the number of in-flight messages exceeds 50% of the partition count for more than 30 minutes."
+  },
+  {
+    "qa_id": "FTF-QA-157",
+    "question": "When should we scale PostgreSQL at FinTechFlow?",
+    "category": "capacity",
+    "answer": "PostgreSQL should be scaled when the database reaches 80% CPU utilization or when the read/write IOPS exceed 90% of the allocated capacity. This can be monitored using Prometheus and Grafana dashboards. Immediate scaling actions should be taken to maintain service reliability. For example, if the `payment-service` shows signs of slowdown, a horizontal scaling command like `kubectl scale statefulset postgres-statefulset --replicas=3` might be necessary. Detailed scaling procedures are documented in the FinTechFlow scaling playbook.",
+    "key_commands": [
+      "kubectl scale statefulset postgres-statefulset --replicas=3",
+      "kubectl top pod -n <namespace> --selector='app=postgres'"
+    ],
+    "related_runbook": "FTF-RB-123",
+    "escalation_threshold": "If PostgreSQL CPU utilization exceeds 95% for more than 5 minutes, this becomes a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-158",
+    "question": "What is the auto-scaling policy for payment-service pods?",
+    "category": "capacity",
+    "answer": "The auto-scaling policy for payment-service pods is configured to maintain a minimum of 2 replicas and a maximum of 10 replicas based on CPU utilization. The policy triggers a scale-up when the CPU utilization exceeds 60% for 5 consecutive minutes and triggers a scale-down when the utilization drops below 30% for 10 minutes. This ensures the payment-service can handle peak loads while maintaining cost efficiency. The policy is defined in the payment-service deployment manifest and managed via ArgoCD.",
+    "key_commands": [
+      "kubectl get hpa payment-service -o json | grep -e 'minReplicas' -e 'maxReplicas' -e 'cpuUtilization'",
+      "kubectl describe hpa payment-service"
+    ],
+    "related_runbook": "FTF-RB-123",
+    "escalation_threshold": "If the payment-service experiences more than 5 consecutive minutes of 90% CPU utilization, it triggers a P1 alert and escalates to the on-call engineer."
+  },
+  {
+    "qa_id": "FTF-QA-159",
+    "question": "How do we conduct chaos engineering at FinTechFlow?",
+    "category": "reliability",
+    "answer": "At FinTechFlow, we conduct chaos engineering to simulate failures in our system to ensure high availability and resilience. For example, we use kubectl to randomly shut down a pod of the payment-service to test its fault tolerance. We also trigger failures in our Kafka topic to simulate message loss and verify the transaction-processor can handle the situation. Monitoring with Prometheus and Grafana helps us track these events, and we use the results to improve our service-level objectives (SLOs).",
+    "key_commands": [
+      "kubectl delete pod -l app=payment-service -n fin-techflow",
+      "kafka-topics.sh --zookeeper localhost:2181 --alter --topic transaction-topic --delete-records"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the P1 MTTR exceeds 30 minutes or if the SLO for the payment-service drops below 99.95%, it escalates to a P1 issue."
+  },
+  {
+    "qa_id": "FTF-QA-160",
+    "question": "What is the change freeze policy during peak payment periods?",
+    "category": "reliability",
+    "answer": "During peak payment periods, all non-urgent changes to the payment-service, order-service, and transaction-processor services are frozen. Changes related to fraud-detection-service and notification-service can proceed if they do not impact the payment path. Specific thresholds for CPU and memory usage triggering the freeze are set at 80% and 90% respectively. The policy ensures that critical services remain stable, aligning with our 99.95% uptime SLO.",
+    "key_commands": [
+      "kubectl get pod -l app=payment-service -n fin-techflow -o jsonpath='{.items[0].metadata.name}' | xargs -I {} kubectl edit pod {} -n fin-techflow",
+      "kubectl get pod -l app=order-service -n fin-techflow -o jsonpath='{.items[0].metadata.name}' | xargs -I {} kubectl edit pod {} -n fin-techflow"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If CPU usage exceeds 85% for more than 10 minutes or memory usage exceeds 95% for more than 5 minutes, this is escalated to a P1 issue."
+  },
+  {
+    "qa_id": "FTF-QA-161",
+    "question": "How do we write a blameless postmortem at FinTechFlow?",
+    "category": "postmortem",
+    "answer": "A blameless postmortem at FinTechFlow involves a thorough analysis of the incident without assigning blame. It includes a detailed description of what happened, the root cause, and steps to prevent future occurrences. For example, if the payment-service experienced downtime, the postmortem would document the exact commands run (e.g., `kubectl describe pod <payment-service-pod>`), thresholds crossed (e.g., CPU usage exceeded 80%), and services affected (e.g., `payment-service`, `transaction-processor`). The postmortem should outline actions taken and future improvements, such as enhancing monitoring with Prometheus and Grafana alerts.",
+    "key_commands": [
+      "kubectl describe pod <payment-service-pod>",
+      "prometheusctl query --query 'up{job=\"payment-service\"}'"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "P1 MTTR exceeds 30 minutes for the payment-service"
+  },
+  {
+    "qa_id": "FTF-QA-162",
+    "question": "What are the required sections in a FinTechFlow postmortem?",
+    "category": "postmortem",
+    "answer": "A FinTechFlow postmortem should include an overview of the incident, root cause analysis, corrective actions, and lessons learned. Specific commands like `kubectl describe pod <pod-name>` and `kubectl logs <pod-name> -n <namespace>` can be used to gather detailed information. The payment-service and Kafka are critical, so their logs and metrics should be reviewed. The P1 MTTR target of 30 minutes means that any incident affecting the payment-service should be escalated immediately.",
+    "key_commands": [
+      "kubectl describe pod <pod-name> -n <namespace>",
+      "kubectl logs <pod-name> -n <namespace>"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "Any incident that impacts the payment-service's 99.95% uptime SLA"
+  },
+  {
+    "qa_id": "FTF-QA-163",
+    "question": "How do we track postmortem action items?",
+    "category": "postmortem",
+    "answer": "Postmortem action items are tracked in a centralized JIRA board for each service. Each action item is assigned to a responsible team member with a due date. We use Prometheus and Grafana dashboards to monitor service health and set alerts for critical issues. PagerDuty is used to notify the on-call team and escalate issues based on predefined thresholds.",
+    "key_commands": [
+      "prometheus alertmanager --list-all",
+      "grafana-cli dashboards list"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "A service downtime exceeding 15 minutes triggers a P1 escalation."
+  },
+  {
+    "qa_id": "FTF-QA-164",
+    "question": "What is the postmortem review schedule?",
+    "category": "postmortem",
+    "answer": "Postmortem reviews for critical incidents are scheduled within 24 hours of resolution, focusing on root cause analysis, impact assessment, and action items for prevention. The payment-service, fraud-detection-service, and order-service are monitored using Prometheus and Grafana, with alerts configured for 99.95% uptime targets. Specific commands used include `kubectl get pods -n <namespace>` and `kubectl logs <pod-name> -n <namespace>` for incident investigation.",
+    "key_commands": [
+      "kubectl get pods -n <namespace>",
+      "kubectl logs <pod-name> -n <namespace>"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "Incidents that exceed 15 minutes of downtime for the payment-service trigger a P1 escalation."
+  },
+  {
+    "qa_id": "FTF-QA-165",
+    "question": "How long after a P1 must the postmortem be complete?",
+    "category": "postmortem",
+    "answer": "At FinTechFlow, the postmortem for a P1 incident must be completed within 24 hours. This includes a thorough analysis of the incident, identification of root causes, and a detailed action plan for remediation. The postmortem is documented in the internal wiki and shared with all relevant teams. Specific commands such as `kubectl describe pod <pod-name>` and `journalctl -u <service-name>` are used to gather detailed logs and system statuses.",
+    "key_commands": [
+      "kubectl describe pod <pod-name>",
+      "journalctl -u payment-service"
+    ],
+    "related_runbook": "FTF-RB-101",
+    "escalation_threshold": "Incidents causing more than 15 minutes of downtime for the payment-service, affecting over 10,000 transactions, or impacting over $500,000 in transactions."
+  },
+  {
+    "qa_id": "FTF-QA-166",
+    "question": "What is the FinTechFlow on-call rotation schedule?",
+    "category": "reliability",
+    "answer": "The on-call rotation schedule at FinTechFlow is managed by a rotating team of senior engineers who cover a 24/7 period. The primary responsibility includes monitoring SLOs, alerting, and responding to incidents. For the payment-service, the team ensures that any issues are resolved within the P1 MTTR target of 30 minutes. Specific commands and thresholds are documented in the on-call playbook.",
+    "key_commands": [
+      "kubectl get pods -n <namespace> -l app=payment-service",
+      "kubectl logs -n <namespace> <pod-name> -c <container-name> -f"
+    ],
+    "related_runbook": "FTF-RB-101",
+    "escalation_threshold": "If the payment-service SLO drops below 99.9%, it is escalated to the senior leadership team."
+  },
+  {
+    "qa_id": "FTF-QA-167",
+    "question": "How do we define and measure reliability at FinTechFlow?",
+    "category": "reliability",
+    "answer": "At FinTechFlow, reliability is defined by the ability of our services to meet their Service Level Objectives (SLOs) and handle the high volume of transactions without downtime. We measure reliability using key performance indicators such as uptime, latency, and error rates. For instance, the payment-service must achieve 99.95% uptime, and we monitor this using Prometheus and Grafana dashboards. We also use ArgoCD for continuous deployment and GitHub Actions for automated testing to ensure consistency and reliability across our services.",
+    "key_commands": [
+      "kubectl top pod -n <namespace>",
+      "prometheus query: `up{job=\"prometheus\"} == 0`"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the payment-service downtime exceeds 15 minutes or the error rate surpasses 0.1% for more than 30 minutes, it will be escalated to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-168",
+    "question": "What is the deployment frequency target at FinTechFlow?",
+    "category": "reliability",
+    "answer": "At FinTechFlow, the deployment frequency target is to achieve at least 20 deployments per week, with a focus on smaller, incremental changes to ensure stability and reliability. This is managed through GitHub Actions and ArgoCD, ensuring that changes are thoroughly tested before being deployed to production. The payment-service, which has a strict SLO of 99.95% uptime, is deployed using a blue-green deployment strategy to minimize downtime and maintain service availability.",
+    "key_commands": [
+      "kubectl apply -f https://github.com/fin-tech-flow/deployment-pipeline/releases/latest/deployment.yml",
+      "argocd app sync payment-service"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the payment-service experiences more than 10 minutes of downtime, it will be escalated to the on-call engineer for immediate resolution."
+  },
+  {
+    "qa_id": "FTF-QA-169",
+    "question": "How do we handle error budget exhaustion?",
+    "category": "reliability",
+    "answer": "When the error budget for the payment-service is exhausted, we initiate a rollback of the failed deployment. This involves stopping the new deployment and reverting to the previous stable version. The rollback process is monitored closely using Prometheus and Grafana to ensure the service returns to its stable state. We also document the issue in our incident management tool, PagerDuty, and conduct a post-mortem to understand the root cause and prevent similar issues in the future.",
+    "key_commands": [
+      "kubectl rollout undo deployment/payment-service -n fin-tech-flow",
+      "prometheus query to check service health: `avg without(instance) (rate(payment_service_errors[5m])) < 0.01`"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the error budget is exhausted for more than 1 hour, it escalates to a P1 incident."
+  },
+  {
+    "qa_id": "FTF-QA-170",
+    "question": "What is the runbook review cadence at FinTechFlow?",
+    "category": "reliability",
+    "answer": "At FinTechFlow, the runbooks are reviewed annually and after any significant incident. This ensures that all procedures are up-to-date and effective. The review includes a deep dive into the payment-service runbook, which is critical for maintaining our SLO of 99.95% uptime. Specific commands like `kubectl get pods` and `kubectl describe pod <payment-service-pod>` are used to check the health of the service.",
+    "key_commands": [
+      "kubectl get pods -n fin.tech.flow",
+      "kubectl describe pod <payment-service-pod> -n fin.tech.flow"
+    ],
+    "related_runbook": "FTF-RB-01",
+    "escalation_threshold": "If the payment-service downtime exceeds 30 minutes, it is escalated to a P1 priority."
+  }
+]
